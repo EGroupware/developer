@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE overlay PUBLIC "-//EGroupware GmbH//eTemplate 2.0//EN" "https://www.egroupware.org/etemplate2.0.dtd">
+<overlay>
+	<template id="developer.translations.index.rows" template="" lang="" group="0" version="19.1.001">
+		<grid width="100%">
+			<columns>
+				<column width="15"/>
+				<column width="100"/>
+				<column width="40%"/>
+				<column width="40%"/>
+				<column width="120"/>
+			</columns>
+			<rows>
+				<row class="th">
+					<nextmatch-sortheader label="#" id="trans_id"/>
+					<nextmatch-sortheader id="trans_app_for" label="Application"/>
+					<nextmatch-sortheader label="Phrase" id="phrase"/>
+					<nextmatch-sortheader label="Translation" id="trans_text"/>
+					<nextmatch-sortheader id="trans_modified" label="Modified"/>
+				</row>
+				<row class="$row_cont[class]">
+					<et2-description  id="${row}[trans_id]"></et2-description>
+					<et2-description id="${row}[trans_app_for]" noLang="true"></et2-description>
+					<et2-description  id="${row}[phrase]" noLang="true"></et2-description>
+					<et2-description  id="${row}[trans_text]" noLang="true"></et2-description>
+					<et2-date-time  id="${row}[trans_modified]" readonly="true"></et2-date-time>
+				</row>
+			</rows>
+		</grid>
+	</template>
+	<template id="developer.translations.index.left" template="" lang="" group="0" version="19.1.001">
+		<et2-button label="Add" id="add" onclick="egw(window).openPopup(egw::link('/index.php','menuaction=developer.EGroupware\\Developer\\TranslationTools.edit'),'800','320','_blank','developer',null,true); return false;" noSubmit="true"></et2-button>
+	</template>
+	<template id="developer.translations.index.right" template="" lang="" group="0" version="19.1.001">
+		<et2-button label="Save" id="save"></et2-button>
+	</template>
+	<template id="developer.translations.index" template="" lang="" group="0" version="19.1.001">
+		<nextmatch id="nm" template="developer.translations.index.rows" header_left="developer.translations.index.left" header_right="developer.translations.index.right"/>
+	</template>
+</overlay>

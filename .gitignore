@@ -1,0 +1,6 @@
+*.old
+*.old.inc.php
+*.old.lang
+*.old.xet
+*.min.js*
+*.min.css*

@@ -1,0 +1,14 @@
+/**
+ * EGroupware - Developer - User interface
+ *
+ * @link https://www.egroupware.org
+ * @author Ralf Becker <rb-AT-egroupware.org>
+ * @package developer
+ * @subpackage setup
+ * @copyright (c) 2024 by Ralf Becker <rb-AT-egroupware.org>
+ * @license https://opensource.org/licenses/gpl-license.php GPL - GNU General Public License
+ */
+
+tr.untranslated {
+    background-color: #dab0b0;
+}
