@@ -23,6 +23,8 @@ class Langfiles extends Api\Storage\Base
 
 	public $columns_to_search = ['phrases.trans_text', 'phrases.trans_remark', self::TABLE.'.trans_text', self::TABLE.'.trans_remark'];
 
+	public array $config;
+
 	/**
 	 * Constructor
 	 */
@@ -30,108 +32,134 @@ class Langfiles extends Api\Storage\Base
 	{
 		parent::__construct(self::APP, self::TABLE, null, '', true);
 		$this->set_times('object');
+
+		$this->config = Api\Config::read(self::APP);
+		$this->langfile_root = $this->config['langfile_root'] ?? EGW_SERVER_ROOT;
+	}
+
+	/**
+	 * Get modification time of lang-file
+	 *
+	 * @param string $app
+	 * @param string $lang
+	 * @return Api\DateTime|null
+	 * @throws Api\Exception
+	 */
+	public function mtimeLangFile(string $app, string $lang)
+	{
+		if (!file_exists($file=$this->langfile_root.'/'.$app.'/lang/egw_'.$lang.'.lang'))
+		{
+			return null;
+		}
+		return new Api\DateTime(filemtime($file), new \DateTimeZone('UTC'));
 	}
 
 	/**
 	 * Update/refresh DB table from lang-files
 	 *
 	 * @param string[]|string|null $_app
-	 * @param string|null $_lang
+	 * @param string[]|string|null $_lang
 	 * @return int number of translations imported
 	 * @throws Api\Db\Exception
 	 * @throws Api\Db\Exception\InvalidSql
 	 * @throws Api\Exception\WrongParameter
 	 * @throws Api\Json\Exception
 	 */
-	public function importLangFiles($_app=null, ?string $_lang=null) : int
+	public function importLangFiles($_app=null, $_lang=null) : int
 	{
 		$n = 0;
 		$push = new Api\Json\Push();
-		foreach($_app ? (array)$_app : scandir(EGW_SERVER_ROOT) as $app)
+		foreach($_app ? (array)$_app : scandir($this->langfile_root) as $app)
 		{
-			if ($app == '.' || $app == '..' || !is_dir($lang_dir=EGW_SERVER_ROOT.'/'.$app.'/lang')) continue;
-
+			if ($app == '.' || $app == '..' || !file_exists($lang_dir=$this->langfile_root.'/'.$app.'/lang') || !is_dir($lang_dir))
+			{
+				continue;
+			}
 			$added = [];
 			set_time_limit(90);
-			foreach($_lang ? (array)"$app/lang/egw_$_lang.lang" : scandir($lang_dir) as $file)
+			foreach($_lang ? array_map(static function($_lang) use ($app) {
+					return "egw_$_lang.lang";
+				}, (array)$_lang) : scandir($lang_dir) as $file)
 			{
-				if (!preg_match('/^egw_([a-z]{2}(-[[a-z]{2})?).lang$/', $file, $matches)) continue;
+				if (!file_exists($lang_dir.'/'.$file) ||
+					!preg_match('/^egw_([a-z]{2}(-[[a-z]{2})?).lang$/', $file, $matches))
+				{
+					continue;
+				}
+				$lang = $matches[1];
 				$push->message($msg=lang('Importing %1...', "$app/lang/$file"), 'success');
 				//error_log(__METHOD__."() $msg");
 
 				($fp = fopen($lang_dir.'/'.$file, 'r')) || throw new \Exception("Can NOT open lang-file $app/lang/$file!");
 				$mtime = new Api\DateTime(filemtime($lang_dir.'/'.$file), new \DateTimeZone('UTC'));
 
-				if (!isset($last_app) || $app !== $last_app)
+				// read all (existing) translations of $app and ($lang OR "en"), "en" to have the trans_phrase_id available
+				$translations = [];
+				foreach($this->db->select(self::TABLE, self::TABLE.'.*,phrases.trans_text AS phrase', [
+					self::TABLE.'.trans_app='.$this->db->quote($app),
+					'('.self::TABLE.'.trans_lang='.$this->db->quote($lang).' OR '.self::TABLE.".trans_lang='en')",
+				], __LINE__, __FILE__, false, '', self::APP, 0,
+					' JOIN '.self::TABLE.' phrases ON phrases.trans_id='.self::TABLE.'.trans_phrase_id') as $row)
 				{
-					// read all (existing) phrases of an app
-					$phrases = [];
-					foreach($this->db->select(self::TABLE, 'trans_id,trans_text', [
-						'trans_phrase_id IS NULL',
-						'trans_id IN (SELECT DISTINCT trans_phrase_id FROM '.Langfiles::TABLE.' WHERE trans_app='.$this->db->quote($app).')'
-					], __LINE__, __FILE__, false, '', self::APP) as $row)
+					$phrase = $row['phrase'];
+					if ($row['trans_lang'] === $lang)
 					{
-						$phrases[strtolower($row['trans_text'])] = $row['trans_id'];
+						$row['trans_modified'] = new Api\DateTime($row['trans_modified'], Api\DateTime::$server_timezone);
+						$translations[$phrase] = $row;
 					}
-					$last_app = $app;
+					elseif (!isset($translations[$phrase]))
+					{
+						$translations[$phrase] = ['trans_phrase_id' => $row['trans_phrase_id']];
+					}
 				}
 
 				// iterate through all lang-files
+				$l = 0;
 				while ($line = fgetcsv($fp, null, "\t"))
 				{
+					++$l;
 					[$phrase, $for_app, $lang, $translation] = $line;
 					$phrase = strtolower($phrase);
 
+					if (isset($translations[$phrase]) && (($translations[$phrase]['trans_text']??null) === $translation ||
+						// ignore (newer) modification in the DB
+						!empty($translations[$phrase]['trans_modified']) && $translations[$phrase]['trans_modified'] > $mtime))
+					{
+						unset($translations[$phrase]);
+						$n++;
+						continue;   // translation already identical in DB
+					}
+
 					try
 					{
-						// if current phrase does NOT yet exist, add it
-						if (!isset($phrases[$phrase]))
-						{
-							if (!($phrases[$phrase] = $this->db->select(self::TABLE, 'trans_id', [
-								'trans_app' => null,
-								'trans_lang' => null,
-								'trans_app_for' => null,
-								'trans_phrase_id' => null,
-								'trans_text' => $phrase,
-							], __LINE__, __FILE__, false, '', self::APP)->fetchColumn()))
-							{
-								$this->db->insert(self::TABLE, [
-									'trans_app' => null,
-									'trans_lang' => null,
-									'trans_app_for' => null,
-									'trans_phrase_id' => null,
-									'trans_text' => $phrase,
-								], false, __LINE__, __FILE__, self::APP);
-							}
-							$phrases[$phrase] = $this->db->get_last_insert_id(self::TABLE, 'trans_id');
-						}
-
 						// add translation, if it does not exist, otherwise update it
 						$this->db->insert(self::TABLE, [
 							'trans_text' => $translation,
 							'trans_modified' => $mtime,
+							'trans_app_for' => $for_app,
 						], [
 							'trans_app' => $app,
 							'trans_lang' => $lang,
-							'trans_app_for' => $for_app,
-							'trans_phrase_id' => $phrases[$phrase],
-							'trans_modified <= '.$this->db->quote($mtime, 'timestamp'),
+							'trans_phrase_id' => $translations[$phrase]['trans_phrase_id'] ?? $this->phraseId($phrase),
 						], __LINE__, __FILE__, self::APP);
-						$added[$phrases[$phrase]] = $phrases[$phrase];
+						unset($translations[$phrase]);
 						$n++;
 					}
 					catch(Api\Db\Exception $ex) {
-						$line = implode('\\t', $line);
-						$push->message($msg=$ex->getMessage()." while importing file='$app/lang/egw_$lang.lang' line: $line", 'error');
-						error_log(__METHOD__."() Error: $msg");
+						$line = implode('<tab>', $line);
+						$push->message($msg=$ex->getMessage()." while importing file='$app/lang/egw_$lang.lang' line $l:\n$line\n--> ignored", 'error');
 					}
-					// delete all not longer existing translations
+				}
+				// delete all no longer existing translations, but keep recently added ones
+				// this assumes the translations will be dumped/written BEFORE git pulling changes!
+				if ($translations)
+				{
 					$this->db->delete(self::TABLE, [
-							'trans_app' => $app,
-							'trans_lang' => $lang,
-							'trans_modified <= '.$this->db->quote($mtime, 'timestamp'),
-							$this->db->expression(self::TABLE, 'NOT ', ['trans_phrase_id' => $added]),
-						], __LINE__, __FILE__, Langfiles::APP);
+						'trans_id' => array_map(static function ($translation) {
+							return $translation['trans_id'];
+						}, $translations),
+						'trans_modified <= ' . $this->db->quote($mtime, 'timestamp'),
+					], __LINE__, __FILE__, Langfiles::APP);
 				}
 			}
 		}
@@ -148,22 +176,26 @@ class Langfiles extends Api\Storage\Base
 	 * @throws Api\Db\Exception
 	 * @throws Api\Db\Exception\InvalidSql
 	 */
-	public function exportLangFiles($_app=null, string $_lang=null)
+	public function exportLangFiles($_app=null, $_lang=null)
 	{
 		$n = 0;
 		$last_app = $last_lang = $fp = null;
 		do {
 			$row = null;
-			foreach($this->db->select(self::TABLE, self::TABLE.'.*,phrases.trans_text AS phrase', [
-				self::TABLE.'.trans_phrase_id IS NOT NULL',
-			]+($_app ? ['trans_app' => $_app] : [])+($_lang ? ['trans_lang' => $_lang] : []), __LINE__, __FILE__, $n,
+			foreach($this->db->select(self::TABLE, self::TABLE.'.*,phrases.trans_text AS phrase', array_merge([
+					$_lang === 'en' ? self::TABLE.'.trans_phrase_id IS NOT NULL' :
+						// only export phrases, which are also in "en"
+						self::TABLE.".trans_phrase_id IN (SELECT trans_phrase_id FROM ".self::TABLE." WHERE trans_lang='en' AND trans_app=".$this->db->quote($_app).")",
+				], ($_app ? [$this->db->expression(self::TABLE, self::TABLE.'.', ['trans_app' => $_app])] : []),
+				($_lang ? [$this->db->expression(self::TABLE, self::TABLE.'.', ['trans_lang' => $_lang])] : [])),
+				__LINE__, __FILE__, $n,
 				'ORDER BY '.self::TABLE.'.trans_app,'.self::TABLE.'.trans_lang,phrases.trans_text',
 				self::APP, self::CHUNK_SIZE, self::PHRASE_JOIN) as $row)
 			{
 				if ($last_app !== $row['trans_app'] || $last_lang !== $row['trans_lang'])
 				{
 					if ($fp) fclose($fp);
-					if (file_exists($path=EGW_SERVER_ROOT."/$row[trans_app]/lang/egw_$row[trans_lang].lang"))
+					if (file_exists($path=$this->langfile_root."/$row[trans_app]/lang/egw_$row[trans_lang].lang"))
 					{
 						rename($path, $path.'.old');
 					}
@@ -225,7 +257,8 @@ class Langfiles extends Api\Storage\Base
 		{
 			// we use "FROM egw_translations en_translations" to always get the untranslated phrases too
 			$join = " JOIN egw_translations phrases ON phrases.trans_id=en_translations.trans_phrase_id".
-                " LEFT JOIN egw_translations on phrases.trans_id=egw_translations.trans_phrase_id AND egw_translations.trans_lang=".$this->db->quote($filter['trans_lang']);
+                " LEFT JOIN egw_translations on phrases.trans_id=egw_translations.trans_phrase_id AND egw_translations.trans_lang=".$this->db->quote($filter['trans_lang']).
+					(!empty($filter['trans_app']) ? "AND egw_translations.trans_app=".$this->db->quote($filter['trans_app']) : '');
 			$filter[] = "en_translations.trans_lang='en'";
 			if (!empty($filter['trans_app']))
 			{
@@ -270,11 +303,14 @@ class Langfiles extends Api\Storage\Base
 		$extra_cols = $extra_cols ? explode(',', $extra_cols) : [];
 		if (empty($join))
 		{
-			$join = " JOIN egw_translations phrases ON phrases.trans_id=en_translations.trans_phrase_id".
-				" LEFT JOIN egw_translations on phrases.trans_id=egw_translations.trans_phrase_id AND egw_translations.trans_lang=".$this->db->quote($lang=$keys['trans_lang']);
+			$join = ' JOIN egw_translations phrases ON phrases.trans_id=en_translations.trans_phrase_id'.
+				' LEFT JOIN egw_translations on phrases.trans_id=egw_translations.trans_phrase_id'.
+					(!empty($keys['trans_id']) ? ' AND egw_translations.trans_id='.(int)$keys['trans_id'] :
+						' AND egw_translations.trans_lang='.$this->db->quote($keys['trans_lang']));
 			$keys[] = "en_translations.trans_lang='en'";
 			if (!empty($keys['trans_app']))
 			{
+				$join .= ' AND egw_translations.trans_app='.$this->db->quote($keys['trans_app']);
 				$keys[] = 'en_translations.trans_app='.$this->db->quote($keys['trans_app']);
 				unset($keys['trans_app']);
 			}
@@ -334,6 +370,37 @@ class Langfiles extends Api\Storage\Base
 	}
 
 	/**
+	 * Get ID of existing phrase, or create it if it does not currently exist
+	 *
+	 * @param string $phrase
+	 * @return int
+	 * @throws Api\Db\Exception
+	 * @throws Api\Db\Exception\InvalidSql
+	 * @throws Api\Exception\WrongParameter
+	 */
+	public function phraseId(string $phrase) : int
+	{
+		if (!($trans_phrase_id = $this->db->select(self::TABLE, 'trans_id', [
+			'trans_app' => null,
+			'trans_lang' => null,
+			'trans_app_for' => null,
+			'trans_phrase_id' => null,
+			'trans_text' => $phrase,
+		], __LINE__, __FILE__, false, '', self::APP)->fetchColumn()))
+		{
+			$this->db->insert(self::TABLE, [
+				'trans_app' => null,
+				'trans_lang' => null,
+				'trans_app_for' => null,
+				'trans_phrase_id' => null,
+				'trans_text' => strtolower($phrase),
+			], false, __LINE__, __FILE__, self::APP);
+			$trans_phrase_id = $this->db->get_last_insert_id(self::TABLE, 'trans_id');
+		}
+		return $trans_phrase_id;
+	}
+
+	/**
 	 * saves the content of data to the db
 	 *
 	 * Reimplemented to set creator and modifier(ed) and save links for new entries.
@@ -346,20 +413,14 @@ class Langfiles extends Api\Storage\Base
 	{
 		$this->data_merge($keys);
 
-		if (empty($this->data['host_id']))
-		{
-			$this->data['host_creator'] = $GLOBALS['egw_info']['user']['account_id'];
-			$this->data['host_created'] = $this->now;
-		}
-		$this->data['host_modifier'] = $GLOBALS['egw_info']['user']['account_id'];
-		$this->data['host_modified'] = $this->now;
+		$this->data['trans_modified'] = $this->now;
 
-		if (($ret = parent::save(null, $extra_where)) == 0 &&
-			// check if we have links to save (new entries only)
-			is_array($keys['link_to']['to_id']) && count($keys['link_to']['to_id']))
+		if (empty($this->data['trans_phrase_id']))
 		{
-			Api\Link::link(self::APP, $this->data['host_id'], $keys['link_to']['to_id']);
+			$this->data['trans_phrase_id'] = $this->phraseId($keys['phrase'] ?? $keys['en_text']);
 		}
+
+		return parent::save(null, $extra_where);
 	}
 
 	/**
@@ -373,70 +434,10 @@ class Langfiles extends Api\Storage\Base
 	 */
 	function delete($keys=null, $only_return_query=false)
 	{
-		if (!is_array($keys) && (int) $keys)
+		if (!is_array($keys))
 		{
-			$keys = array('host_id' => (int) $keys);
+			$keys = is_numeric($keys) ? ['trans_id' => $keys] : array_combine(['trans_app', 'trans_lang', 'trans_phrase_id'], explode(':', $keys));
 		}
-		$host_id = is_null($keys) ? $this->data['host_id'] : $keys['host_id'];
-
-		if (($ret = parent::delete($keys)) && $host_id)
-		{
-			// delete all links to Developer entry $host_id
-			Api\Link::unlink(0, self::APP, $host_id);
-		}
-		return $ret;
-	}
-
-	/**
-	 * get name for an Developer entry / host identified by $entry
-	 *
-	 * Is called as hook to participate in the linking
-	 *
-	 * @param int|array $entry int ts_id or array with timesheet entry
-	 * @return string|boolean string with title, null if timesheet not found, false if no perms to view it
-	 */
-	function link_title( $entry )
-	{
-		if (!is_array($entry))
-		{
-			// need to preserve the $this->data
-			$backup =& $this->data;
-			unset($this->data);
-			$entry = $this->read(['host_id' => $entry]);
-			// restore the data again
-			$this->data =& $backup;
-		}
-		if (!$entry)
-		{
-			return $entry;
-		}
-		return $entry['host_name'];
-	}
-
-	/**
-	 * query Developer app for entries matching $pattern
-	 *
-	 * Is called as hook to participate in the linking
-	 *
-	 * @param string $pattern pattern to search
-	 * @param array $options Array of options for the search
-	 * @return array with ts_id - title pairs of the matching entries
-	 */
-	function link_query($pattern, Array &$options = array() )
-	{
-		$limit = false;
-		$need_count = false;
-		if($options['start'] || $options['num_rows'])
-		{
-			$limit = array($options['start'], $options['num_rows']);
-			$need_count = true;
-		}
-		$result = [];
-		foreach($this->search($pattern,false,'','','%',false,'OR', $limit, null, '', $need_count) as $row)
-		{
-			$result[$row['host_id']] = $this->link_title($row);
-		}
-		$options['total'] = $need_count ? $this->total : count($result);
-		return $result;
+		return parent::delete($keys);
 	}
 }

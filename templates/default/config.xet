@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE overlay PUBLIC "-//EGroupware GmbH//eTemplate 2.0//EN" "https://www.egroupware.org/etemplate2.0.dtd">
+<overlay>
+	<template id="developer.config" template="" lang="" group="0" version="16.1">
+		<grid width="100%" class="admin-config egwGridView_grid">
+			<columns>
+				<column width="50%"/>
+				<column/>
+			</columns>
+			<rows>
+				<row>
+					<et2-description  value="TranslationTools" span="all" class="subHeader"></et2-description>
+				</row>
+				<row>
+					<et2-description value="Root of language files"></et2-description>
+					<et2-textbox id="newsettings[langfile_root]" placeholder="EGW_SERVER_ROOT"></et2-textbox>>
+				</row>
+				<row>
+					<et2-description value="deepl.com API key"></et2-description>
+					<et2-textbox id="newsettings[deeplcom_apikey]"></et2-textbox>
+				</row>
+			</rows>
+		</grid>
+	</template>
+</overlay>

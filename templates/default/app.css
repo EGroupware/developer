@@ -12,3 +12,6 @@
 tr.untranslated {
     background-color: #dab0b0;
 }
+tr.unsaved {
+    background-color: darkseagreen;
+}

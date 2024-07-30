@@ -32,7 +32,10 @@
 		<et2-button label="Add" id="add" onclick="egw(window).openPopup(egw::link('/index.php','menuaction=developer.EGroupware\\Developer\\TranslationTools.edit'),'800','320','_blank','developer',null,true); return false;" noSubmit="true"></et2-button>
 	</template>
 	<template id="developer.translations.index.right" template="" lang="" group="0" version="19.1.001">
-		<et2-button label="Save" id="save"></et2-button>
+		<et2-hbox>
+			<et2-button label="Save" id="save[current]" image="save" statustext="Save current language and 'en'"></et2-button>
+			<et2-button label="Save all" id="save[all]" image="save" statustext="Save all languages"></et2-button>
+		</et2-hbox>
 	</template>
 	<template id="developer.translations.index" template="" lang="" group="0" version="19.1.001">
 		<nextmatch id="nm" template="developer.translations.index.rows" header_left="developer.translations.index.left" header_right="developer.translations.index.right"/>
