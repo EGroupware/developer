@@ -10,15 +10,12 @@
  * @license https://opensource.org/licenses/gpl-license.php GPL - GNU General Public License
  */
 
-use EGroupware\Developer;
-
 $setup_info['developer']['name']      = 'developer';
 $setup_info['developer']['version']   = '23.1';
 $setup_info['developer']['app_order'] = 1;
 $setup_info['developer']['enable']    = 1;
 $setup_info['developer']['tables']    = array('egw_translations');
-$setup_info['developer']['index']     = Developer\Langfiles::APP.'.'.Developer\TranslationTools::class.'.index&ajax=true';
-$setup_info['developer']['only_db']   = array('none');  // do NOT install by default
+$setup_info['developer']['index']     = 'developer.EGroupware\\Developer\\TranslationTools.index&ajax=true';
 
 $setup_info['developer']['author'] =
 $setup_info['developer']['maintainer'] = array(
@@ -30,9 +27,9 @@ $setup_info['developer']['description'] =
 'Some tools for EGroupware developers: translation, DB-schema, ...';
 
 // Hooks we implement
-$setup_info['developer']['hooks']['search_link'] = Developer\Hooks::class.'::search_link';
-$setup_info['developer']['hooks']['admin'] = Developer\Hooks::class.'::all_hooks';
-$setup_info['developer']['hooks']['sidebox_menu'] = Developer\Hooks::class.'::all_hooks';
+$setup_info['developer']['hooks']['search_link'] = 'EGroupware\\Developer\\Hooks::search_link';
+$setup_info['developer']['hooks']['admin'] = 'EGroupware\\Developer\\Hooks::all_hooks';
+$setup_info['developer']['hooks']['sidebox_menu'] = 'EGroupware\\Developer\\Hooks::all_hooks';
 
 /* Dependencies for this app to work */
 $setup_info['developer']['depends'][] = array(
