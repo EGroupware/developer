@@ -401,9 +401,7 @@ class Langfiles extends Api\Storage\Base
 	}
 
 	/**
-	 * saves the content of data to the db
-	 *
-	 * Reimplemented to set creator and modifier(ed) and save links for new entries.
+	 * Saves a translation and, if necessary, creates phrase and en-translation too
 	 *
 	 * @param array $keys =null if given $keys are copied to data before saveing => allows a save as
 	 * @param string|array $extra_where =null extra where clause, eg. to check an etag, returns true if no affected rows!
@@ -424,9 +422,7 @@ class Langfiles extends Api\Storage\Base
 	}
 
 	/**
-	 * Deletes an Developer entry identified by $keys or the loaded one
-	 *
-	 * Reimplemented to notify the link class (unlink)
+	 * Deletes a phrase including all it's translations
 	 *
 	 * @param array $keys if given array with col => value pairs to characterise the rows to delete
 	 * @param boolean $only_return_query =false * NOT supported, but required by PHP 8 *

@@ -84,12 +84,12 @@ class TranslationTools
 					// for new phrases, save the "en" text too
 					if (empty($content['trans_phrase_id']) && !empty($content['en_text'] ?: $content['phrase']) && $content['trans_lang'] !== 'en')
 					{
-						$this->bo->init([
+						$this->bo->init($content);
+						$this->bo->save([
 							'phrase' => strtolower($content['phrase'] ?: $content['en_text']),
 							'trans_text' => $content['en_text'] ?: $content['phrase'],
 							'trans_lang' => 'en',
-						]+$content);
-						$this->bo->save($content);
+						]);
 					}
 					$this->bo->init($content);
 					if (!$this->bo->save($content))
@@ -131,13 +131,16 @@ class TranslationTools
 			'en_text' => !empty($content['trans_id']),
 		];
 		$sel_options = [
-			'trans_app_for' => [
+			// api is "common" by default, and never "api"
+			'trans_app_for' => (empty($content['trans_app']) || !in_array($content['trans_app'], ['api', 'phpgwapi']) ? [
 				$content['trans_app'] => $content['trans_app'],
+			// setup only uses setup, as it does NOT load other translations
+			] : [])+($content['trans_app'] !== 'setup' ? [
 				'common'      => 'common',
 				'login'       => 'login',
 				'admin'       => 'admin',
-				'preferences' => 'preferences'
-			],
+				'preferences' => 'preferences',
+			] : []),
 		];
 		$tmpl = new Api\Etemplate('developer.translations.edit');
 		$tmpl->exec(self::APP.'.'.self::class.'.edit', $content, $sel_options, $readonlys, $content, 2);
