@@ -257,8 +257,9 @@ class Langfiles extends Api\Storage\Base
 		{
 			// we use "FROM egw_translations en_translations" to always get the untranslated phrases too
 			$join = " JOIN egw_translations phrases ON phrases.trans_id=en_translations.trans_phrase_id".
-                " LEFT JOIN egw_translations on phrases.trans_id=egw_translations.trans_phrase_id AND egw_translations.trans_lang=".$this->db->quote($filter['trans_lang']).
-					(!empty($filter['trans_app']) ? "AND egw_translations.trans_app=".$this->db->quote($filter['trans_app']) : '');
+                " LEFT JOIN egw_translations on en_translations.trans_phrase_id=egw_translations.trans_phrase_id".
+					" AND egw_translations.trans_app=en_translations.trans_app".
+					" AND egw_translations.trans_lang=".$this->db->quote($filter['trans_lang']);
 			$filter[] = "en_translations.trans_lang='en'";
 			if (!empty($filter['trans_app']))
 			{
@@ -304,13 +305,13 @@ class Langfiles extends Api\Storage\Base
 		if (empty($join))
 		{
 			$join = ' JOIN egw_translations phrases ON phrases.trans_id=en_translations.trans_phrase_id'.
-				' LEFT JOIN egw_translations on phrases.trans_id=egw_translations.trans_phrase_id'.
+				' LEFT JOIN egw_translations on en_translations.trans_phrase_id=egw_translations.trans_phrase_id'.
+					' AND en_translations.trans_app=egw_translations.trans_app'.
 					(!empty($keys['trans_id']) ? ' AND egw_translations.trans_id='.(int)$keys['trans_id'] :
 						' AND egw_translations.trans_lang='.$this->db->quote($keys['trans_lang']));
 			$keys[] = "en_translations.trans_lang='en'";
 			if (!empty($keys['trans_app']))
 			{
-				$join .= ' AND egw_translations.trans_app='.$this->db->quote($keys['trans_app']);
 				$keys[] = 'en_translations.trans_app='.$this->db->quote($keys['trans_app']);
 				unset($keys['trans_app']);
 			}
