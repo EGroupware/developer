@@ -78,25 +78,37 @@ class TranslationTools
 							'trans_lang' => 'en',
 						]);
 					}
-					$this->bo->init($content);
-					if (!$this->bo->save($content))
+					if (!empty($content['trans_text']))
 					{
-						Api\Framework::refresh_opener(lang('Entry saved.'),
-							self::APP, $this->bo->data['row_id'],
-							empty($content['row_id']) ? 'add' : 'edit');
+						$this->bo->init($content);
+						if (!$this->bo->save($content))
+						{
+							Api\Framework::refresh_opener(lang('Entry saved.'),
+								self::APP, $this->bo->data['row_id'],
+								empty($content['row_id']) ? 'add' : 'edit');
 
-						$content = array_merge($content, $this->bo->data);
+							$content = array_merge($content, $this->bo->data);
+							Api\Framework::message(lang('Entry saved.'));
+						}
+						else
+						{
+							Api\Framework::message(lang('Error storing entry!'));
+							unset($button);
+						}
 					}
-					else
+					// delete current lang translation by emptying and saving it
+					elseif (!empty($content['trans_id']))
 					{
-						Api\Framework::message(lang('Error storing entry!'));
-						unset($button);
+						$this->bo->delete($content['trans_id']);
+						Api\Framework::refresh_opener(lang('Entry deleted.'),
+							self::APP, $content['row_id'], 'update');   // "update" as we show it again as untranslated
+						unset($content['trans_id']);
+						Api\Framework::message(lang('Entry deleted.'));
 					}
 					if ($button === 'save')
 					{
 						Api\Framework::window_close();	// does NOT return
 					}
-					Api\Framework::message(lang('Entry saved.'));
 					break;
 
 				case 'delete':

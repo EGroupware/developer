@@ -442,13 +442,14 @@ class Langfiles extends Api\Storage\Base
 	/**
 	 * Deletes a phrase including all it's translations
 	 *
-	 * @param array $keys if given array with col => value pairs to characterise the rows to delete
+	 * @param array|string|int|null $keys int trans_id, string with row_id (trans_app:trans_lang:trans_phrase_id)
+	 *  or array with col => value pairs to characterise the rows to delete, null to delete row in $this->data
 	 * @param boolean $only_return_query =false * NOT supported, but required by PHP 8 *
 	 * @return int affected rows, should be 1 if ok, 0 if an error
 	 */
 	function delete($keys=null, $only_return_query=false)
 	{
-		if (!is_array($keys))
+		if ($keys && !is_array($keys))
 		{
 			$keys = is_numeric($keys) ? ['trans_id' => $keys] : array_combine(['trans_app', 'trans_lang', 'trans_phrase_id'], explode(':', $keys));
 		}
