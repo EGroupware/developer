@@ -17,7 +17,7 @@
 					<et2-textarea id="phrase" rows="3"></et2-textarea>
 				</row>
 				<row valign="top">
-					<et2-description for="en_text" value="English text"></et2-description>
+					<et2-description for="en_text" label="EN {translation}"></et2-description>
 					<et2-textarea id="en_text" rows="3" placeholder="leave empty, if identical to phrase"></et2-textarea>
 				</row>
 				<row valign="top">

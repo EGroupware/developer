@@ -13,6 +13,7 @@
 namespace EGroupware\Developer;
 
 use EGroupware\Api;
+use Zend\Diactoros\Response\JsonResponse;
 
 class TranslationTools
 {
@@ -34,26 +35,12 @@ class TranslationTools
 	 */
 	protected $bo;
 	
-	const REFRESH_INTERVAL = 7200;
-
 	/**
 	 * Constructor
 	 */
 	public function __construct()
 	{
 		$this->bo = new Langfiles();
-		
-		/*if (!($refreshed = Api\Cache::getInstance(Bo::APP, 'phrasesRefreshed')) || $refreshed < time()-self::REFRESH_INTERVAL)
-		{
-			$time = microtime(true);
-			$num = $this->bo->importLangFiles();
-			$time = number_format(microtime(true) - $time, 1);
-
-			$push = new Api\Json\Push();
-			$push->message(lang('Imported total of %1 translations in %2 seconds', $num, $time), 'success');
-			
-			Api\Cache::setInstance(self::APP, 'phrasesRefreshed', $refreshed=time());
-		}*/
 	}
 
 	/**
@@ -136,7 +123,7 @@ class TranslationTools
 				$content['trans_app'] => $content['trans_app'],
 			// setup only uses setup, as it does NOT load other translations
 			] : [])+($content['trans_app'] !== 'setup' ? [
-				'common'      => 'common',
+				'common'      => 'All applications',
 				'login'       => 'login',
 				'admin'       => 'admin',
 				'preferences' => 'preferences',
@@ -153,8 +140,9 @@ class TranslationTools
 	 * @param array& $rows =null
 	 * @param array& $readonlys =null
 	 */
-	public function get_rows($query, array &$rows=null, array &$readonlys=null)
+	public function get_rows(&$_query, array &$rows=null, array &$readonlys=null)
 	{
+		$query = $_query;
 		// load lang-files, if app or lang changed (always load "en" too, as we show it as source)
 		$state = Api\Cache::getSession(self::class, 'state');
 		if (!empty($query['cat_id']) && $query['cat_id'] !== ($state['cat_id']??null) ||
@@ -164,19 +152,32 @@ class TranslationTools
 		}
 		Api\Cache::setSession(self::class, 'state', $query);
 
+		// store last used app in preferences, if changed
+		if ($query['cat_id'] !== ($GLOBALS['egw_info']['user']['preferences']['developer']['last_app']??''))
+		{
+			$prefs = new Api\Preferences();
+			$prefs->read_repository();
+			$prefs->add(self::APP, 'last_app', $GLOBALS['egw_info']['user']['preferences']['developer']['last_app']=$query['cat_id']);
+			$prefs->save_repository();
+		}
+
 		$query['col_filter']['trans_app'] = $query['cat_id'];
 		$query['col_filter']['trans_lang'] = $query['filter'];
-		if (!empty($query['cat_id']))
-		{
-			$mtime_langfile = $this->bo->mtimeLangFile($query['cat_id'], $query['filter']);
-		}
 		switch ($query['filter2'])
 		{
 			case 'untranslated':
 				$query['col_filter'][] = Langfiles::TABLE.'.trans_text IS NULL';
 				break;
 			case 'unsaved':
-				$query['col_filter'][] = Langfiles::TABLE.'.trans_modified > '.$GLOBALS['egw']->db->quote($mtime_langfile, 'timestamp');
+				if (!empty($query['cat_id']))
+				{
+					$query['col_filter'][] = Langfiles::TABLE.'.trans_modified > '.$GLOBALS['egw']->db->quote($this->bo->mtimeLangFile($query['cat_id'], $query['filter']), 'timestamp');
+				}
+				else
+				{
+					Api\Json\Response::get()->message(lang('"%1" filter only available, if an application is selected.', lang('untranslated')));
+					$_query['filter2'] = '';
+				}
 				break;
 		}
 
@@ -187,9 +188,13 @@ class TranslationTools
 			{
 				$row['class'] = 'untranslated';
 			}
-			elseif ($query['cat_id'] && $row['trans_modified'] > $mtime_langfile)
+			elseif ($row['trans_modified'] > $this->bo->mtimeLangFile($row['trans_app'], $query['filter']))
 			{
 				$row['class'] = 'unsaved';
+			}
+			if ($row['trans_app_for'] === 'common')
+			{
+				$row['trans_app_for'] = ''; // to translate by emptyLabel to "All applications"
 			}
 		}
 		return $total;
@@ -207,15 +212,16 @@ class TranslationTools
 			$content = [
 				'nm' => Api\Cache::getSession(self::class, 'state') ?: [
 					'get_rows'       =>	self::APP.'.'.self::class.'.get_rows',
-					'cat_id'         => '',
+					'cat_id'         => $GLOBALS['egw_info']['user']['preferences']['developer']['last_app'] ?? '',
 					'filter'         => $GLOBALS['egw_info']['user']['preferences']['common']['lang'],
 					'filter2'        => '',
 					'cat_is_select'  => true,
-					'order'          =>	'phrase',// IO name of the column to sort after (optional for the sortheaders)
+					'order'          =>	'en_translation',// IO name of the column to sort after (optional for the sortheaders)
 					'sort'           =>	'ASC',// IO direction of the sort: 'ASC' or 'DESC'
 					'row_id'         => 'row_id',
 					'row_modified'   => 'trans_modified',
-					'placeholder_actions' => ['add', 'import']
+					'default_cols'   => '!trans_id,phrase,trans_modified',
+					'placeholder_actions' => ['add', 'import'],
 				],
 			];
 			$content['nm']['actions'] = $this->get_actions();
@@ -246,6 +252,10 @@ class TranslationTools
 				'' => 'All',
 				'untranslated' => 'untranslated',
 				'unsaved' => 'unsaved',
+			],
+			'trans_app_for' => [    // regular app-names are handled by et2-select-app itself
+				'common' => 'All applications',
+				'setup' => 'Setup',
 			],
 		];
 		uasort($sel_options['cat_id'], 'strcasecmp');

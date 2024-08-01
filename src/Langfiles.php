@@ -38,6 +38,18 @@ class Langfiles extends Api\Storage\Base
 	}
 
 	/**
+	 * Get path of lang-file(s)
+	 *
+	 * @param string $app
+	 * @param ?string $lang
+	 * @return string path of $app's lang-directory or file for $lang
+	 */
+	public function langPath(string $app, ?string $lang=null)
+	{
+		return $this->langfile_root.'/'.$app.'/lang'.($lang ? '/egw_'.$lang.'.lang' : '');
+	}
+
+	/**
 	 * Get modification time of lang-file
 	 *
 	 * @param string $app
@@ -47,11 +59,12 @@ class Langfiles extends Api\Storage\Base
 	 */
 	public function mtimeLangFile(string $app, string $lang)
 	{
-		if (!file_exists($file=$this->langfile_root.'/'.$app.'/lang/egw_'.$lang.'.lang'))
+		static $mtimes = [];
+		if (!array_key_exists($path=$this->langPath($app, $lang), $mtimes))
 		{
-			return null;
+			$mtimes[$path] = !file_exists($path) ? null : new Api\DateTime(filemtime($path), new \DateTimeZone('UTC'));
 		}
-		return new Api\DateTime(filemtime($file), new \DateTimeZone('UTC'));
+		return $mtimes[$path];
 	}
 
 	/**
@@ -71,7 +84,7 @@ class Langfiles extends Api\Storage\Base
 		$push = new Api\Json\Push();
 		foreach($_app ? (array)$_app : scandir($this->langfile_root) as $app)
 		{
-			if ($app == '.' || $app == '..' || !file_exists($lang_dir=$this->langfile_root.'/'.$app.'/lang') || !is_dir($lang_dir))
+			if ($app == '.' || $app == '..' || !file_exists($lang_dir=$this->langPath($app)) || !is_dir($lang_dir))
 			{
 				continue;
 			}
@@ -195,7 +208,7 @@ class Langfiles extends Api\Storage\Base
 				if ($last_app !== $row['trans_app'] || $last_lang !== $row['trans_lang'])
 				{
 					if ($fp) fclose($fp);
-					if (file_exists($path=$this->langfile_root."/$row[trans_app]/lang/egw_$row[trans_lang].lang"))
+					if (file_exists($path=$this->langPath($row['trans_app'], $row['trans_lang'])))
 					{
 						rename($path, $path.'.old');
 					}
@@ -272,6 +285,7 @@ class Langfiles extends Api\Storage\Base
 			$extra_cols[] = 'en_translations.trans_app AS trans_app';
 			$extra_cols[] = 'en_translations.trans_app_for AS trans_app_for';
 			$extra_cols[] = 'en_translations.trans_phrase_id AS trans_phrase_id';
+			$extra_cols[] = 'en_translations.trans_text AS en_text';
 			// use queried language, in case not (yet) translated phrases
 			$extra_cols[] = $this->db->quote($filter['trans_lang']).' AS trans_lang';
 			unset($filter['trans_lang']);
@@ -310,10 +324,13 @@ class Langfiles extends Api\Storage\Base
 					(!empty($keys['trans_id']) ? ' AND egw_translations.trans_id='.(int)$keys['trans_id'] :
 						' AND egw_translations.trans_lang='.$this->db->quote($keys['trans_lang']));
 			$keys[] = "en_translations.trans_lang='en'";
-			if (!empty($keys['trans_app']))
+			foreach(['trans_app', 'trans_phrase_id'] as $key)
 			{
-				$keys[] = 'en_translations.trans_app='.$this->db->quote($keys['trans_app']);
-				unset($keys['trans_app']);
+				if (!empty($keys[$key]))
+				{
+					$keys[] = "en_translations.$key=".$this->db->quote($keys[$key], $key === 'trans_phrase_id' ? 'int' : 'varchar');
+					unset($keys[$key]);
+				}
 			}
 			// add regular columns prefixed with table-name to not be ambiguous
 			$extra_cols = array_merge(array_map(static function($column)
