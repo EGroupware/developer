@@ -15,3 +15,7 @@ tr.untranslated {
 tr.unsaved {
     background-color: darkseagreen;
 }
+et2-description.header {
+    font-size: 120%;
+    font-weight: bold;
+}

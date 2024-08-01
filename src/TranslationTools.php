@@ -26,6 +26,7 @@ class TranslationTools
 	public $public_functions = [
 		'index' => true,
 		'edit'  => true,
+		'scan'  => true,
 	];
 
 	/**
@@ -46,9 +47,9 @@ class TranslationTools
 	/**
 	 * Edit a host
 	 *
-	 * @param array $content =null
+	 * @param ?array $content =null
 	 */
-	public function edit(array $content=null)
+	public function edit(?array $content=null)
 	{
 		if (!is_array($content))
 		{
@@ -74,12 +75,13 @@ class TranslationTools
 						$this->bo->init($content);
 						$this->bo->save([
 							'phrase' => strtolower($content['phrase'] ?: $content['en_text']),
-							'trans_text' => $content['en_text'] ?: $content['phrase'],
+							'trans_text' => trim($content['en_text'] ?: $content['phrase']),
 							'trans_lang' => 'en',
 						]);
 					}
 					if (!empty($content['trans_text']))
 					{
+						$content['trans_text'] = trim($content['trans_text']);
 						$this->bo->init($content);
 						if (!$this->bo->save($content))
 						{
@@ -127,19 +129,11 @@ class TranslationTools
 		}
 		$readonlys = [
 			'button[delete]' => empty($content['trans_id']),
-			'en_text' => !empty($content['trans_id']),
+			'en_text' => !empty($content['trans_phrase_id']),
+			'phrase' => !empty($content['trans_phrase_id']),
 		];
 		$sel_options = [
-			// api is "common" by default, and never "api"
-			'trans_app_for' => (empty($content['trans_app']) || !in_array($content['trans_app'], ['api', 'phpgwapi']) ? [
-				$content['trans_app'] => $content['trans_app'],
-			// setup only uses setup, as it does NOT load other translations
-			] : [])+($content['trans_app'] !== 'setup' ? [
-				'common'      => 'All applications',
-				'login'       => 'login',
-				'admin'       => 'admin',
-				'preferences' => 'preferences',
-			] : []),
+			'trans_app_for' => $this->bo->transAppFor($content['trans_app']),
 		];
 		$tmpl = new Api\Etemplate('developer.translations.edit');
 		$tmpl->exec(self::APP.'.'.self::class.'.edit', $content, $sel_options, $readonlys, $content, 2);
@@ -215,9 +209,9 @@ class TranslationTools
 	/**
 	 * Index
 	 *
-	 * @param array $content =null
+	 * @param ?array $content =null
 	 */
-	public function index(array $content=null)
+	public function index(?array $content=null)
 	{
 		if (!is_array($content) || empty($content['nm']))
 		{
@@ -371,5 +365,66 @@ class TranslationTools
 			default:
 				throw new Api\Exception\AssertionFailed($action.': To be implemented ;)');
 		}
+	}
+
+	public function scan(?array $content=null)
+	{
+		$state = Api\Cache::getSession(self::class, 'state');
+
+		if (!is_array($content))
+		{
+			$phrases = $this->bo->newPhrases($app = $state['cat_id'] ?: 'api');
+			$content = [
+				'app' => $app,
+				'new' => array_map(function($data, $phrase)
+				{
+					return [
+						'phrase' => $phrase,
+						'trans_app_for' => $data['app'],
+						'occurrences' => array_map(function($file, $lines)
+						{
+							[$app, $file] = explode('/', $file, 2);
+							return [
+								'file' => $file,
+								'href' => $this->bo->githubLink($app, $file, $lines[0]),
+								'lines' => implode(', ', array_filter($lines)),
+							];
+						}, array_keys($data['occurrences']), $data['occurrences']),
+					];
+				}, $phrases, array_keys($phrases)),
+			];
+		}
+		elseif (!empty($content['button']))
+		{
+			$button = key($content['button']);
+			unset($content['button']);
+			switch($button)
+			{
+				case 'save':
+					$added = 0;
+					foreach($content['new']['add']??[] as $row => $add)
+					{
+						if ($add && !empty($data = $content['new'][$row]??[]))
+						{
+							$this->bo->init([
+								'trans_app' => $content['app'],
+								'trans_lang' => 'en',
+								'trans_phrase_id' => $this->bo->phraseId($data['phrase']),
+								'trans_app_for' => $data['trans_app_for'],
+								'trans_text' => trim($data['phrase']),
+							]);
+							$this->bo->save();
+							$added++;
+						}
+					}
+					Api\Framework::refresh_opener(lang('%1 phrases added.', $added), self::APP);
+					Api\Framework::window_close();
+					break;
+			}
+		}
+		$template = new Api\Etemplate('developer.translations.scan');
+		$template->exec(self::APP.'.'.self::class.'.scan', $content, [
+			'trans_app_for' => $this->bo->transAppFor($content['app']),
+		], null, $content, 2);
 	}
 }

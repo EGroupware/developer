@@ -398,6 +398,7 @@ class Langfiles extends Api\Storage\Base
 	 */
 	public function phraseId(string $phrase) : int
 	{
+		$phrase = strtolower(trim($phrase));
 		if (!($trans_phrase_id = $this->db->select(self::TABLE, 'trans_id', [
 			'trans_app' => null,
 			'trans_lang' => null,
@@ -411,7 +412,7 @@ class Langfiles extends Api\Storage\Base
 				'trans_lang' => null,
 				'trans_app_for' => null,
 				'trans_phrase_id' => null,
-				'trans_text' => strtolower($phrase),
+				'trans_text' => $phrase,
 			], false, __LINE__, __FILE__, self::APP);
 			$trans_phrase_id = $this->db->get_last_insert_id(self::TABLE, 'trans_id');
 		}
@@ -454,5 +455,95 @@ class Langfiles extends Api\Storage\Base
 			$keys = is_numeric($keys) ? ['trans_id' => $keys] : array_combine(['trans_app', 'trans_lang', 'trans_phrase_id'], explode(':', $keys));
 		}
 		return parent::delete($keys);
+	}
+
+	/**
+	 * Scan app for new phrases: phrases not in app's or common translations
+	 *
+	 * @param string $app
+	 * @return array $phrase => ["app" => $trans_app_for, "occurrences" => [$file => [...$lines]]]
+	 */
+	function newPhrases(string $app)
+	{
+		$phrases = SearchSources::searchApp($app, $this->langfile_root);
+		uksort($phrases, 'strnatcasecmp');
+		$existing = [];
+		foreach($this->db->select(self::TABLE, 'DISTINCT '.self::TABLE.'.trans_text AS phrase,en_translations.trans_text AS en_text', [
+			self::TABLE.'.trans_phrase_id IS NULL',
+			"en_translations.trans_app IN ('api', ".$this->db->quote($app).")",
+		], __LINE__, __FILE__, false, 'ORDER BY phrase', self::APP, 0,
+			' JOIN '.self::TABLE." en_translations ON en_translations.trans_lang='en' AND en_translations.trans_phrase_id=".self::TABLE.'.trans_id') as $row)
+		{
+			$existing[$row['phrase']] = $row['en_text'];
+		}
+		foreach($phrases as $phrase => $data)
+		{
+			if (isset($existing[strtolower(trim($phrase))]) || strlen($phrase) < 2)
+			{
+				unset($phrases[$phrase]);
+			}
+		}
+		return $phrases;
+	}
+
+	/**
+	 * Get Link to Github repos
+	 *
+	 * @param string $app
+	 * @param string $file
+	 * @param int $line
+	 * @return string
+	 */
+	function githubLink(string $app, string $file, int $line=0)
+	{
+		static $app2repo = [
+			'stylite'  => 'https://github.com/EGroupwareGmbH/epl/tree/master',
+			'esyncpro' => 'https://github.com/EGroupwareGmbH/esyncpro/tree/master',
+			'policy'   => 'https://github.com/EGroupwareGmbH/policy/tree/master',
+			'webauthn' => 'https://github.com/EGroupwareGmbH/webautnn/tree/master',
+			'kanban'   => 'https://github.com/EGroupwareGmbH/kanban/tree/master',
+			'smallpart'=> 'https://github.com/EGroupware/smallpart/blob/master/'
+		];
+		static $main_apps = [
+			'addressbook', 'admin', 'api', 'calendar', 'filemanager', 'home', 'importexport', 'infolog', 'kdots',
+			'mail', 'notifications', 'pixelegg', 'preferences', 'resources', 'setup', 'timesheet'
+		];
+		if (isset($app2repo[$app]))
+		{
+			$url = $app2repo[$app].'/'.$file;
+		}
+		elseif (in_array($app, $main_apps))
+		{
+			$url = 'https://github.com/EGroupware/egroupware/tree/master/'.$app.'/'.$file;
+		}
+		else
+		{
+			$url = 'https://github.com/EGroupware/'.$app.'/tree/master/'.$file;
+		}
+		if ($line)
+		{
+			$url .= '#L'.$line;
+		}
+		return $url;
+	}
+
+	/**
+	 * Get trans_app_for values for a given $app
+	 *
+	 * @param string $app
+	 * @return string[] app-name => label
+	 */
+	function transAppFor(string $app)
+	{
+		// api is "common" by default, and never "api"
+		return (empty($app) || !in_array($app, ['api', 'phpgwapi']) ? [
+			$app => $app,
+			// setup only uses setup, as it does NOT load other translations
+		] : [])+($app !== 'setup' ? [
+			'common'      => 'All applications',
+			'login'       => 'login',
+			'admin'       => 'admin',
+			'preferences' => 'preferences',
+		] : []);
 	}
 }

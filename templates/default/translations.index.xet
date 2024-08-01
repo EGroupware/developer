@@ -33,8 +33,8 @@
 	</template>
 	<template id="developer.translations.index.left" template="" lang="" group="0" version="19.1.001">
 		<et2-button label="Add" id="add" onclick="egw(window).openPopup(egw::link('/index.php','menuaction=developer.EGroupware\\Developer\\TranslationTools.edit'),'800','320','_blank','developer',null,true); return false;" noSubmit="true"></et2-button>
-		<!--et2-button label="Scan" id="scan" image="view" statustext="Scan application for new phrases"
-			onclick="egw(window).openPopup(egw::link('/index.php','menuaction=developer.EGroupware\\Developer\\TranslationTools.scan'),'800','320','_blank','developer',null,true); return false;" noSubmit="true"></et2-button-->
+		<et2-button label="Scan" id="scan" image="view" statustext="Scan application for new phrases"
+			onclick="egw(window).openPopup(egw::link('/index.php','menuaction=developer.EGroupware\\Developer\\TranslationTools.scan'),'800','800','_blank','developer',null,true); return false;" noSubmit="true"></et2-button>
 	</template>
 	<template id="developer.translations.index.right" template="" lang="" group="0" version="19.1.001">
 		<et2-hbox>

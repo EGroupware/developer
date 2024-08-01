@@ -12,8 +12,8 @@
 					<et2-description for="trans_app_for" value="Application"></et2-description>
 					<et2-select id="trans_app_for"></et2-select>
 				</row>
-				<row disabled="@trans_phrase_id" valign="top">
-					<et2-description value="Phrase in English"></et2-description>
+				<row valign="top">
+					<et2-description value="Phrase"></et2-description>
 					<et2-textarea id="phrase" rows="3"></et2-textarea>
 				</row>
 				<row valign="top">
@@ -28,7 +28,7 @@
 					<et2-description  value="Last modified"></et2-description>
 					<et2-date-time  id="trans_modified" readonly="true"></et2-date-time>
 				</row>
-				<row>
+				<row class="dialogFooterToolbar">
 					<et2-hbox  span="all" width="100%">
 						<et2-button  accesskey="s" label="Save" id="button[save]" hideOnReadonly="true"></et2-button>
 						<et2-button  label="Apply" id="button[apply]" hideOnReadonly="true"></et2-button>

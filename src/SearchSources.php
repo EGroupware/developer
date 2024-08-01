@@ -37,22 +37,48 @@ class SearchSources
 	 * @var array phrase => app-name pairs
 	 */
 	protected $plist = [];
+	protected $root = EGW_SERVER_ROOT;
+
+	public function __construct($root = EGW_SERVER_ROOT)
+	{
+		$this->root = $root;
+	}
 
 	/**
 	 * Search app for translatable phrases
 	 *
 	 * @param string $app
 	 * @param string $root
-	 * @return array phrase => app-name pairs
+	 * @return array $phrase => ["app" => $app, "occurrences" => [$file => [...$lines]]]
 	 */
-	function searchApp(string $app, string $root=EGW_SERVER_ROOT)
+	public static function searchApp(string $app, string $root=EGW_SERVER_ROOT)
 	{
-		$this->plist = [];
-		$this->parse_php_app($app == 'phpgwapi' || $app === 'api' ? 'common' : $app, $root . '/' . $app . '/');
+		$search = new self();
+		$search->parse_php_app($app == 'phpgwapi' || $app === 'api' ? 'common' : $app, $app . '/');
 
-		return $this->plist;
+		return $search->plist;
 	}
 
+	protected function add(string $phrase, string $app, string $file, int $line=0)
+	{
+		if (!isset($this->plist[$phrase]))
+		{
+			$this->plist[$phrase] = [
+				'app' => $app,
+				'occurrences' => [],
+			];
+		}
+		if (str_starts_with($file, $this->root.'/'))
+		{
+			[, $file] = explode($this->root.'/', $file);
+		}
+		if (!isset($this->plist[$phrase]['occurrences'][$file]) || !in_array($line, $this->plist[$phrase]['occurrences'][$file]))
+		{
+			$this->plist[$phrase]['occurrences'][$file][] = $line;
+		}
+	}
+
+	const IGNORE_PREG = '#(^|/).*(\.old|\.min\.js)(\.|$)#';
 
 	protected function parse_php_app($app, $root)
 	{
@@ -60,7 +86,7 @@ class SearchSources
 		if (!($d=dir($root))) return;
 		while ($fn=$d->read())
 		{
-			if (@is_dir($root.$fn.'/'))
+			if (is_dir($root.$fn.'/'))
 			{
 				if (($fn!='.')&&($fn!='..')&&($fn!='CVS') && $fn != '.svn' && $fn != '.git')
 				{
@@ -73,7 +99,7 @@ class SearchSources
 					{
 						if (substr($f,0,5) == 'hook_' && !file_exists($f = $root.'inc/'.$f))
 						{
-							$this->special_file($app,$f,$this->files[$type]);
+							$this->special_file($app, $f, $this->files[$type], $root);
 						}
 					}
 				}
@@ -82,14 +108,15 @@ class SearchSources
 			{
 				if (isset($this->files[$fn]))
 				{
-					$this->special_file($app,$root.$fn,$this->files[$fn]);
+					$this->special_file($app, $fn, $this->files[$fn], $root);
 				}
-				if (substr($fn, -4) == '.xet')
+				if (substr($fn, -4) == '.xet' && !preg_match(self::IGNORE_PREG, $fn))
 				{
 					$this->xet_file($app, $root.$fn);
 					continue;
 				}
-				if (strpos($fn,'.php') === False && strpos($fn,'.js') === False)
+				$parts = explode('.', $fn);
+				if (!in_array(array_pop($parts), ['php','ts','js']) || preg_match(self::IGNORE_PREG, $fn))
 				{
 					continue;
 				}
@@ -97,10 +124,8 @@ class SearchSources
 
 				foreach($lines as $n => $line)
 				{
-					//echo "line='$line', lines[1+$n]='".$lines[1+$n]."'<br>\n";
 					while (preg_match($reg_expr,$line,$parts))
 					{
-						//echo "***func='$parts[1]', rest='$parts[2]'<br>\n";
 						$args = $this->functions[$parts[1]];
 						$rest = $parts[2];
 						for($i = 1; $i <= $args[0]; ++$i)
@@ -113,7 +138,6 @@ class SearchSources
 							$del = $rest[0];
 							if ($del == '"' || $del == "'")
 							{
-								//echo "rest='$rest'<br>\n";
 								while (($next = strpos($rest,$del,$next)) !== False && $rest[$next-1] == '\\')
 								{
 									$rest = substr($rest,0,$next-1).substr($rest,$next);
@@ -123,11 +147,10 @@ class SearchSources
 									break;
 								}
 								$phrase = str_replace('\\\\','\\',substr($rest,1,$next-1));
-								//echo "next2=$next, phrase='$phrase'<br>\n";
+
 								if ($args[0] == $i)
 								{
-									//if (!isset($this->plist[$phrase])) echo ">>>$phrase<<<<br>\n";
-									$this->plist[$phrase] = $app;
+									$this->add($phrase, $app, $root.$fn, $n+1);
 									array_shift($args);
 									if (!count($args))
 									{
@@ -150,9 +173,9 @@ class SearchSources
 		$d->close();
 	}
 
-	protected function config_file($app,$fname)
+	protected function config_file($app, $fname, $root=EGW_SERVER_ROOT)
 	{
-		$lines = file($fname);
+		$lines = file($root.'/'.$fname);
 
 		if ($app != 'setup')
 		{
@@ -163,20 +186,20 @@ class SearchSources
 			while (preg_match('/\{lang_([^}]+)\}(.*)/',$line,$found))
 			{
 				$lang = str_replace('_',' ',$found[1]);
-				$this->plist[$lang] = $app;
+				$this->add($lang, $app, $root.'/'.$fname, $n+1);
 
 				$line = $found[2];
 			}
 		}
 	}
 
-	protected function special_file($app,$fname,$langs_in)
+	protected function special_file($app, $fname, $langs_in, $root=EGW_SERVER_ROOT)
 	{
 		$app_in = $app;
 		switch ($langs_in)
 		{
 		 	case 'config':
-				$this->config_file($app,$fname);
+				$this->config_file($app, $fname, $root);
 				return;
 			case 'file_admin':
 			case 'file_preferences':
@@ -279,7 +302,7 @@ class SearchSources
 				{
 					if (!preg_match('/^(\$|@|[( :%s)0-9-]+$)/', $label))	// blacklist variables and other unwanted stuff as numbers
 					{
-						$this->plist[$label] = $app;
+						$this->add($label, $app, $fname);
 					}
 				}
 			}
