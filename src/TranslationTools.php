@@ -222,7 +222,8 @@ class TranslationTools
 		if (!is_array($content) || empty($content['nm']))
 		{
 			$content = [
-				'nm' => Api\Cache::getSession(self::class, 'state') ?: [
+				'nm' => Api\Cache::getSession(self::class, 'state') ?:
+				[
 					'get_rows'       =>	self::APP.'.'.self::class.'.get_rows',
 					'cat_id'         => $GLOBALS['egw_info']['user']['preferences']['developer']['last_app'] ?? '',
 					'filter'         => $GLOBALS['egw_info']['user']['preferences']['common']['lang'],
@@ -251,7 +252,7 @@ class TranslationTools
 		}
 		$sel_options = [
 			'cat_id' => [
-					'' => '',
+					'' => 'All applications',
 					'setup' => lang('Setup'),]+array_map(static function(array $app)
 			{
 				return lang($app['name']);

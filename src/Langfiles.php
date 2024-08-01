@@ -274,11 +274,11 @@ class Langfiles extends Api\Storage\Base
 					" AND egw_translations.trans_app=en_translations.trans_app".
 					" AND egw_translations.trans_lang=".$this->db->quote($filter['trans_lang']);
 			$filter[] = "en_translations.trans_lang='en'";
-			if (!empty($filter['trans_app']))
+			if (array_key_exists('trans_app', $filter) && !empty($filter['trans_app']))
 			{
 				$filter[] = "en_translations.trans_app=".$this->db->quote($filter['trans_app']);
-				unset($filter['trans_app']);
 			}
+			unset($filter['trans_app']);
 			$extra_cols[] = 'phrases.trans_text AS phrase';
 			$extra_cols[] = 'phrases.trans_remark AS phrase_remark';
 			// use en ones, otherwise they would be NULL for not (yet) translated phrases!
