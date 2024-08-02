@@ -223,7 +223,7 @@ class TranslationTools
 					'filter'         => $GLOBALS['egw_info']['user']['preferences']['common']['lang'],
 					'filter2'        => '',
 					'cat_is_select'  => true,
-					'order'          =>	'en_translation',// IO name of the column to sort after (optional for the sortheaders)
+					'order'          =>	'en_text',// IO name of the column to sort after (optional for the sortheaders)
 					'sort'           =>	'ASC',// IO direction of the sort: 'ASC' or 'DESC'
 					'row_id'         => 'row_id',
 					'row_modified'   => 'trans_modified',
