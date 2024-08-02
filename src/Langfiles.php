@@ -458,32 +458,52 @@ class Langfiles extends Api\Storage\Base
 	}
 
 	/**
-	 * Scan app for new phrases: phrases not in app's or common translations
+	 * Scan app for new phrases or check existing ones: phrases not in app's or common translations
 	 *
 	 * @param string $app
+	 * @param null|string|string[] $row_ids row-ids to check and return their occurrences or not found
 	 * @return array $phrase => ["app" => $trans_app_for, "occurrences" => [$file => [...$lines]]]
 	 */
-	function newPhrases(string $app)
+	function scanApp(string $app, $row_ids=null)
 	{
+		if (is_string($row_ids))
+		{
+			$row_ids = $row_ids ? explode(',', $row_ids) : null;
+		}
 		$phrases = SearchSources::searchApp($app, $this->langfile_root);
 		uksort($phrases, 'strnatcasecmp');
+
 		$existing = [];
-		foreach($this->db->select(self::TABLE, 'DISTINCT '.self::TABLE.'.trans_text AS phrase,en_translations.trans_text AS en_text', [
+		foreach($this->db->select(self::TABLE, 'DISTINCT '.self::TABLE.'.trans_text AS phrase,en_translations.trans_text AS en_text', array_merge([
 			self::TABLE.'.trans_phrase_id IS NULL',
 			"en_translations.trans_app IN ('api', ".$this->db->quote($app).")",
-		], __LINE__, __FILE__, false, 'ORDER BY phrase', self::APP, 0,
+		], !empty($row_ids) ? [
+			$this->db->expression(self::TABLE, 'en_translations.', ['trans_phrase_id' => array_map(static function($row_id) {
+				return explode(':', $row_id)[2];
+			}, $row_ids)])
+		] : []), __LINE__, __FILE__, false, 'ORDER BY phrase', self::APP, 0,
 			' JOIN '.self::TABLE." en_translations ON en_translations.trans_lang='en' AND en_translations.trans_phrase_id=".self::TABLE.'.trans_id') as $row)
 		{
 			$existing[$row['phrase']] = $row['en_text'];
 		}
-		foreach($phrases as $phrase => $data)
+		if ($row_ids)
 		{
-			if (isset($existing[strtolower(trim($phrase))]) || strlen($phrase) < 2)
+			$result = array_map(static function($phrase) use ($phrases)
 			{
-				unset($phrases[$phrase]);
-			}
+				$found = array_filter($phrases, function($text) use ($phrase) {
+					return $phrase === strtolower(trim($text));
+				}, ARRAY_FILTER_USE_KEY);
+				return ['phrase' => $phrase]+($found ? array_pop($found) : []);
+			}, array_keys($existing));
 		}
-		return $phrases;
+		else
+		{
+			$result = array_filter($phrases, static function($phrase) use ($existing)
+			{
+				return !(isset($existing[strtolower(trim($phrase))]) || strlen($phrase) < 2);
+			}, ARRAY_FILTER_USE_KEY);
+		}
+		return $result;
 	}
 
 	/**

@@ -299,6 +299,20 @@ class TranslationTools
 				'popup' => '800x320',
 				'group' => $group,
 			],
+			'scan' => [
+				'caption' => 'Scan',
+				'icon' => 'view',
+				'url' => 'menuaction=developer.'.self::class.'.scan',
+				'popup' => '800x800',
+				'group' => $group=1,
+			],
+			'check' => [
+				'caption' => 'Check',
+				'icon' => 'check',
+				'url' => 'menuaction=developer.'.self::class.'.scan&row_id=$id',
+				'popup' => '800x800',
+				'group' => $group,
+			],
 			'import' => [
 				'caption' => 'Import all lang-files',
 				'icon' => 'import',
@@ -362,8 +376,11 @@ class TranslationTools
 				}
 				return lang('%1 translations deleted.', $deleted);
 
+			case NULL:  // happens when column-selection changes
+				return null;
+
 			default:
-				throw new Api\Exception\AssertionFailed($action.': To be implemented ;)');
+				throw new Api\Exception\AssertionFailed(json_encode($action).': To be implemented ;)');
 		}
 	}
 
@@ -373,13 +390,14 @@ class TranslationTools
 
 		if (!is_array($content))
 		{
-			$phrases = $this->bo->newPhrases($app = $state['cat_id'] ?: 'api');
+			$phrases = $this->bo->scanApp($app = $state['cat_id'] ?: 'api', $_GET['row_id']??null);
 			$content = [
+				'header' => empty($_GET['row_id']) ? 'Scanning for new phrases in' : 'Checking phrases in',
 				'app' => $app,
 				'new' => array_map(function($data, $phrase)
 				{
 					return [
-						'phrase' => $phrase,
+						'phrase' => $data['phrase'] ?? $phrase,
 						'trans_app_for' => $data['app'],
 						'occurrences' => array_map(function($file, $lines)
 						{
@@ -389,7 +407,7 @@ class TranslationTools
 								'href' => $this->bo->githubLink($app, $file, $lines[0]),
 								'lines' => implode(', ', array_filter($lines)),
 							];
-						}, array_keys($data['occurrences']), $data['occurrences']),
+						}, array_keys($data['occurrences'] ?? []), $data['occurrences'] ?? []),
 					];
 				}, $phrases, array_keys($phrases)),
 			];
@@ -420,11 +438,30 @@ class TranslationTools
 					Api\Framework::refresh_opener(lang('%1 phrases added.', $added), self::APP);
 					Api\Framework::window_close();
 					break;
+
+				case 'delete':
+					$deleted = 0;
+					foreach($content['new']['add']??[] as $row => $add)
+					{
+						if ($add && !empty($data = $content['new'][$row]??[]))
+						{
+							$deleted += $this->bo->delete([
+								'trans_app' => $content['app'],
+								'trans_phrase_id' => $this->bo->phraseId($data['phrase']),
+							]);
+						}
+					}
+					Api\Framework::refresh_opener(lang('%1 translations deleted.', $deleted), self::APP);
+					Api\Framework::window_close();
+					break;
 			}
 		}
 		$template = new Api\Etemplate('developer.translations.scan');
 		$template->exec(self::APP.'.'.self::class.'.scan', $content, [
 			'trans_app_for' => $this->bo->transAppFor($content['app']),
-		], null, $content, 2);
+		], [
+			'button[save]' => !empty($_GET['row_id']),
+			'button[delete]' => empty($_GET['row_id']),
+		], $content, 2);
 	}
 }

@@ -2,7 +2,7 @@
 <!DOCTYPE overlay PUBLIC "-//EGroupware GmbH//eTemplate 2.0//EN" "https://www.egroupware.org/etemplate2.0.dtd">
 <overlay>
     <template id="developer.translations.scan" template="" lang="" group="0" version="19.1">
-        <et2-description id="app" label="Scanning for new phrases in:" class="header"></et2-description>
+        <et2-description id="app" label="@header" class="header"></et2-description>
         <grid width="100%" id="new" class="egwGridView_grid">
             <columns>
                 <column width="40%"/>
@@ -29,8 +29,9 @@
             </rows>
         </grid>
         <et2-hbox class="dialogFooterToolbar">
-            <et2-button  accesskey="s" label="Add" id="button[save]" hideOnReadonly="true"></et2-button>
-            <et2-button  label="Cancel" id="button[cancel]" onclick="window.close(); return false;" hideOnReadonly="true"></et2-button>
+            <et2-button accesskey="s" label="Add" id="button[save]" hideOnReadonly="true"></et2-button>
+            <et2-button label="Delete" id="button[delete]" hideOnReadonly="true"></et2-button>
+            <et2-button  label="Cancel" id="button[cancel]" onclick="window.close(); return false;"></et2-button>
         </et2-hbox>
     </template>
 </overlay>
