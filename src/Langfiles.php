@@ -514,7 +514,7 @@ class Langfiles extends Api\Storage\Base
 	 * @param int $line
 	 * @return string
 	 */
-	function githubLink(string $app, string $file, int $line=0)
+	function githubLink(string $app, string $file, ?int $line=null)
 	{
 		static $app2repo = [
 			'stylite'  => 'https://github.com/EGroupwareGmbH/epl/tree/master',
