@@ -3,31 +3,34 @@
 <overlay>
     <template id="developer.translations.scan" template="" lang="" group="0" version="19.1">
         <et2-description id="app" label="@header" class="header"></et2-description>
-        <grid width="100%" id="new" class="egwGridView_grid">
-            <columns>
-                <column width="40%"/>
-                <column width="150"/>
-                <column/>
-            </columns>
-            <rows>
-                <row valign="top">
-                    <et2-checkbox id="add[$row]" label="$row_cont[phrase]"></et2-checkbox>
-                    <et2-select id="${row}[trans_app_for]"></et2-select>
-                    <grid id="${row}[occurrences]" width="100%">
-                        <columns>
-                            <column/>
-                            <column width="100"/>
-                        </columns>
-                        <rows>
-                            <row>
-                                <et2-description id="${row}[file]" extraLinkTarget="_blank" href="$row_cont[href]"></et2-description>
-                                <et2-description id="${row}[lines]"></et2-description>
-                            </row>
-                        </rows>
-                    </grid>
-                </row>
-            </rows>
-        </grid>
+        <et2-box style="overflow-y: auto; max-height: 800px">
+            <grid width="100%" id="new" class="egwGridView_grid">
+                <columns>
+                    <column width="40%"/>
+                    <column width="150"/>
+                    <column/>
+                </columns>
+                <rows>
+                    <row valign="top">
+                        <!-- &#8201; is used to stop eTemplate from translating our phrase / checkbox label -->
+                        <et2-checkbox id="add[$row]" label="&#8201;$row_cont[phrase]"></et2-checkbox>
+                        <et2-select id="${row}[trans_app_for]"></et2-select>
+                        <grid id="${row}[occurrences]" width="100%">
+                            <columns>
+                                <column/>
+                                <column width="100"/>
+                            </columns>
+                            <rows>
+                                <row>
+                                    <et2-description id="${row}[file]" extraLinkTarget="_blank" href="$row_cont[href]"></et2-description>
+                                    <et2-description id="${row}[lines]"></et2-description>
+                                </row>
+                            </rows>
+                        </grid>
+                    </row>
+                </rows>
+            </grid>
+        </et2-box>
         <et2-hbox class="dialogFooterToolbar">
             <et2-button accesskey="s" label="Add" id="button[save]" hideOnReadonly="true"></et2-button>
             <et2-button label="Delete" id="button[delete]" hideOnReadonly="true"></et2-button>
