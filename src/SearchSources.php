@@ -323,19 +323,32 @@ namespace EGroupware\Developer
 
 		protected function xet_file($app, $fname)
 		{
-			$matches = null;
-			error_log(__METHOD__."('$app', '$fname')");
-			if (($content = file_get_contents($fname)) &&
-				preg_match_all('#((<(label|description|et2-label|et2-description)[^>]+value|label|summary|placeholder|statustext|blur)="([^"]+)"|<option[^>]*>(.*)</option>)#', $content, $matches, PREG_PATTERN_ORDER))
+			if (($content = file_get_contents($fname)))
 			{
-				foreach (array_diff(array_merge($matches[4], $matches[5]), ['']) as $label)
+				// remove / ignore commented out stuff
+				$content = preg_replace('/<!--.*?-->/s', '', $content);
+
+				// first search and remove options (remove because they have value attributes which we do NOT want
+				if (preg_match_all('#<option[^>]*>(.*?)</option>#', $content, $options, PREG_PATTERN_ORDER))
 				{
-					foreach (preg_match_all('/{([^}]+)}/', $label, $matches2, PREG_PATTERN_ORDER) ? $matches[1] : [$label] as $label)
+					$content = preg_replace('#<option[^>]*>(.*?)</option>#', '', $content);
+				}
+
+				// second search all widgets with e.g. label or other translation relevant attributes
+				preg_match_all('#<[^> ]+\s+(value|label|summary|placeholder|statustext|blur)="([^"]+)"#', $content, $attributes, PREG_PATTERN_ORDER);
+
+				foreach(['options' => $options[1]??[], 'attributes' => $attributes[2]??[]] as $type => $labels)
+				{
+					foreach ($labels as $full_label)
 					{
-						if (!preg_match('/^(\$|@|[( :%s)0-9-]+$)/', $label))    // blacklist variables and other unwanted stuff as numbers
+						foreach (preg_match_all('/{([^}]+)}/', $full_label, $matches, PREG_PATTERN_ORDER) ? $matches[1] : [$full_label] as $label)
 						{
-							// xet-file are xml and encode & as &amp;
-							$this->add(str_replace('&amp;', '&', $label), $app, $fname, self::findLine($fname, '"'.$label.'"'));
+							if (!preg_match('/^(\$|@|[( :%s)0-9-]+$)/', $label))    // blacklist variables and other unwanted stuff as numbers
+							{
+								// xet-file are xml and entity-encoded e.g. & as &amp;
+								$this->add(html_entity_decode($label), $app, $fname, self::findLine($fname,
+									$type === 'attributes' ? '"' . $label . '"' : ">$label</option>"));
+							}
 						}
 					}
 				}
