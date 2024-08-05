@@ -100,11 +100,11 @@ class Langfiles extends Api\Storage\Base
 					continue;
 				}
 				$lang = $matches[1];
-				$push->message($msg=lang('Importing %1...', "$app/lang/$file"), 'success');
-				//error_log(__METHOD__."() $msg");
 
 				($fp = fopen($lang_dir.'/'.$file, 'r')) || throw new \Exception("Can NOT open lang-file $app/lang/$file!");
 				$mtime = new Api\DateTime(filemtime($lang_dir.'/'.$file), new \DateTimeZone('UTC'));
+				$format = Api\DateTime::$user_dateformat.' '.Api\DateTime::$user_timeformat;    //.':s';
+				$push->message(lang('Importing %1 (%2) ...', "$app/lang/$file", Api\DateTime::server2user($mtime, $format)), 'success');
 
 				// read all (existing) translations of $app and ($lang OR "en"), "en" to have the trans_phrase_id available
 				$translations = [];
