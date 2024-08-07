@@ -246,7 +246,6 @@ class TranslationTools
 		}
 		$sel_options = [
 			'cat_id' => [
-					'' => 'All applications',
 					'setup' => lang('Setup'),]+array_map(static function(array $app)
 			{
 				return lang($app['name']);
@@ -266,7 +265,7 @@ class TranslationTools
 			],
 		];
 		uasort($sel_options['cat_id'], 'strcasecmp');
-		$sel_options['cat_id'][''] = 'Select Application';
+		$sel_options['cat_id'] = array_merge(['' => 'All applications'], $sel_options['cat_id']);
 		$sel_options['filter'] = array_combine(array_keys($sel_options['filter']), array_map(static function($language, $lang)
 		{
 			return $lang.': '.$language;
