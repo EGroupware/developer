@@ -128,7 +128,7 @@ class Langfiles extends Api\Storage\Base
 
 				// iterate through all lang-files
 				$l = 0;
-				while ($line = fgetcsv($fp, null, "\t"))
+				while ($line = fgetcsv($fp, null, "\t", "\0", ''))
 				{
 					++$l;
 					[$phrase, $for_app, $lang, $translation] = $line;
