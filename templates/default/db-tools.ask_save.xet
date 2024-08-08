@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE overlay PUBLIC "-//EGroupware GmbH//eTemplate 2.0//EN" "https://www.egroupware.org/etemplate2.0.dtd">
+<overlay>
+    <template id="developer.db-tools.ask_save" template="" lang="" group="0" version="1.9.002">
+        <grid>
+            <columns>
+                <column/>
+                <column/>
+            </columns>
+            <rows>
+                <row disabled="!@msg">
+                    <et2-description id="msg" span="all" class="redItalic" noLang="true"></et2-description>
+                </row>
+                <row>
+                    <et2-description span="all"></et2-description>
+                </row>
+                <row>
+                    <et2-description id="version" label="Update from Version '%s' to" noLang="true"></et2-description>
+                    <et2-textbox id="new_version" statustext="enter the new version number here (> old_version), empty for no update-file"></et2-textbox>
+                </row>
+                <row>
+                    <et2-description span="all"></et2-description>
+                </row>
+                <row>
+                    <et2-description label="Do you want to save the changes you made in table %s?" id="table" span="all"></et2-description>
+                </row>
+                <row>
+                    <et2-description span="all"></et2-description>
+                </row>
+                <row>
+                    <et2-button label="Yes" id="yes" statustext="saves changes to tables_current.inc.php" align="right" image="check"></et2-button>
+                    <et2-button label="No" id="no" statustext="discard changes" image="cancel"></et2-button>
+                </row>
+            </rows>
+        </grid>
+    </template>
+</overlay>

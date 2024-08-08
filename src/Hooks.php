@@ -6,7 +6,7 @@
  * @author Ralf Becker <rb-AT-egroupware.org>
  * @package developer
  * @subpackage setup
- * @copyright (c) 2023 by Ralf Becker <rb-AT-egroupware.org>
+ * @copyright (c) 2024 by Ralf Becker <rb-AT-egroupware.org>
  * @license http://opensource.org/licenses/gpl-license.php GPL - GNU General Public License
  */
 
@@ -62,7 +62,7 @@ class Hooks
 					'ajax' => 'true',
 				]),
 				'DB-Tools' => Api\Egw::link('/index.php', [
-					'menuaction' => TranslationTools::APP.'.'.TranslationTools::class.'.index',
+					'menuaction' => TranslationTools::APP.'.'.DbTools::class.'.edit',
 					'ajax' => 'true',
 				]),
 			];

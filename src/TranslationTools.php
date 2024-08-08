@@ -215,6 +215,14 @@ class TranslationTools
 	{
 		if (!is_array($content) || empty($content['nm']))
 		{
+			// redirect to last active tool
+			if (($menuaction = Api\Cache::getSession(self::APP, 'active')) &&
+				!str_starts_with($menuaction['menuaction'], self::APP.'.'.self::class.'.'))
+			{
+				Api\Framework::redirect_link('/index.php', $menuaction, self::APP);
+			}
+			Api\Cache::setSession(self::APP, 'active', self::APP.'.'.self::class.'.index&ajax=true');
+
 			$content = [
 				'nm' => Api\Cache::getSession(self::class, 'state') ?:
 				[
