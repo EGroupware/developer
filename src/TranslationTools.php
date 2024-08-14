@@ -146,45 +146,53 @@ class TranslationTools
 	 * @param array& $rows =null
 	 * @param array& $readonlys =null
 	 */
-	public function get_rows(&$_query, array &$rows=null, array &$readonlys=null)
+	public function get_rows(&$_query, array &$rows=null, array &$readonlys=null, $id_only=false)
 	{
 		$query = $_query;
-		// load lang-files, if app or lang changed (always load "en" too, as we show it as source)
-		$state = Api\Cache::getSession(self::class, 'state');
-		if (!empty($query['cat_id']) && $query['cat_id'] !== ($state['cat_id']??null) ||
-			$query['filter'] !== ($state['filter']??null))
-		{
-			$this->bo->importLangFiles($query['cat_id'], array_unique(['en', $query['filter']]));
-		}
-		Api\Cache::setSession(self::class, 'state', $query);
 
-		// store last used app in preferences, if changed
-		if ($query['cat_id'] !== ($GLOBALS['egw_info']['user']['preferences']['developer']['last_app']??''))
+		// only for real user-action, not e.g. refresh
+		if (empty($query['csv_export']) && empty($query['col_filter']['row_id'][0]) && !$id_only)
 		{
-			$prefs = new Api\Preferences();
-			$prefs->read_repository();
-			$prefs->add(self::APP, 'last_app', $GLOBALS['egw_info']['user']['preferences']['developer']['last_app']=$query['cat_id']);
-			$prefs->save_repository();
+			// load lang-files, if app or lang changed (always load "en" too, as we show it as source)
+			$state = Api\Cache::getSession(self::class, 'state');
+			if (!empty($query['cat_id']) && $query['cat_id'] !== ($state['cat_id']??null) ||
+				$query['filter'] !== ($state['filter']??null))
+			{
+				$this->bo->importLangFiles($query['cat_id'], array_unique(['en', $query['filter']]));
+			}
+			Api\Cache::setSession(self::class, 'state', $query);
+
+			// store last used app in preferences, if changed
+			if ($query['cat_id'] !== ($GLOBALS['egw_info']['user']['preferences']['developer']['last_app']??''))
+			{
+				$prefs = new Api\Preferences();
+				$prefs->read_repository();
+				$prefs->add(self::APP, 'last_app', $GLOBALS['egw_info']['user']['preferences']['developer']['last_app']=$query['cat_id']);
+				$prefs->save_repository();
+			}
 		}
 
-		$query['col_filter']['trans_app'] = $query['cat_id'];
-		$query['col_filter']['trans_lang'] = $query['filter'];
-		switch ($query['filter2'])
+		if (empty($query['col_filter']['row_id'][0]))
 		{
-			case 'untranslated':
-				$query['col_filter'][] = Langfiles::TABLE.'.trans_text IS NULL';
-				break;
-			case 'unsaved':
-				if (!empty($query['cat_id']))
-				{
-					$query['col_filter'][] = Langfiles::TABLE.'.trans_modified > '.$GLOBALS['egw']->db->quote($this->bo->mtimeLangFile($query['cat_id'], $query['filter']), 'timestamp');
-				}
-				else
-				{
-					Api\Json\Response::get()->message(lang('"%1" filter only available, if an application is selected.', lang('untranslated')));
-					$_query['filter2'] = '';
-				}
-				break;
+			$query['col_filter']['trans_app'] = $query['cat_id'];
+			$query['col_filter']['trans_lang'] = $query['filter'];
+			switch ($query['filter2'])
+			{
+				case 'untranslated':
+					$query['col_filter'][] = Langfiles::TABLE.'.trans_text IS NULL';
+					break;
+				case 'unsaved':
+					if (!empty($query['cat_id']))
+					{
+						$query['col_filter'][] = Langfiles::TABLE.'.trans_modified > '.$GLOBALS['egw']->db->quote($this->bo->mtimeLangFile($query['cat_id'], $query['filter']), 'timestamp');
+					}
+					else
+					{
+						Api\Json\Response::get()->message(lang('"%1" filter only available, if an application is selected.', lang('untranslated')));
+						$_query['filter2'] = '';
+					}
+					break;
+			}
 		}
 
 		$total = $this->bo->get_rows($query, $rows, $readonlys);
@@ -221,7 +229,10 @@ class TranslationTools
 			{
 				Api\Framework::redirect_link('/index.php', $menuaction, self::APP);
 			}
-			Api\Cache::setSession(self::APP, 'active', self::APP.'.'.self::class.'.index&ajax=true');
+			Api\Cache::setSession(self::APP, 'active', [
+				'menuaction' => self::APP.'.'.self::class.'.index',
+				'ajax' => 'true',
+			]);
 
 			$content = [
 				'nm' => Api\Cache::getSession(self::class, 'state') ?:
