@@ -222,6 +222,15 @@ class Langfiles extends Api\Storage\Base
 		}
 		while ($row);
 		if ($fp) fclose($fp);
+
+		// invalidate lang-files, so they get read by next reload
+		foreach((array)$_app as $app)
+		{
+			foreach((array)$_lang as $lang)
+			{
+				Api\Translation::invalidate_lang_file($app, $lang);
+			}
+		}
 	}
 
 	/**
