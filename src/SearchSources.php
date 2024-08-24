@@ -93,14 +93,14 @@ namespace EGroupware\Developer
 					{
 						$this->parse_php_app($app, $root . $fn . '/');
 					}
-					if ($fn == 'inc')
+					if ($fn == 'inc' || $fn == 'src' && !file_exists($root.'/inc'))
 					{
-						// make sure all hooks get called, even if they dont exist as hooks
+						// make sure all hooks get called, even if they don't exist as hooks
 						foreach ($this->files as $f => $type)
 						{
 							if (substr($f, 0, 5) == 'hook_' && !file_exists($f = $root . 'inc/' . $f))
 							{
-								$this->special_file($app, $f, $this->files[$type], $root);
+								$this->special_file($app, $f, $this->files[$type] ?? null, $root);
 							}
 						}
 					}
@@ -243,6 +243,10 @@ namespace EGroupware\Developer
 					$GLOBALS['egw']->hooks->single('admin', $app_in, true);
 					break;
 
+				case 'hook_sidebox_menu.inc.php':
+					$GLOBALS['egw']->hooks->single('sidebox_menu', $app_in, true);
+					break;
+
 				case 'hook_preferences.inc.php':
 					$GLOBALS['egw']->hooks->single('preferences', $app_in, true);
 					break;
@@ -377,14 +381,14 @@ namespace EGroupware\Developer
  */
 namespace
 {
-	if (!function_exists('display_sidebox'))// && strpos($_GET['menuaction'], '.uilangfile.') !== false)
+	if (!function_exists('\\display_sidebox'))// && strpos($_GET['menuaction'], '.uilangfile.') !== false)
 	{
 		function display_sidebox($appname, $menu_title, $file)    // hook_sidebox_menu
 		{
 			if (!is_array($file)) return;
 
 			unset($file['_NewLine_']);
-			if (is_array($GLOBALS['file']))
+			if (!is_array($GLOBALS['file']))
 			{
 				$GLOBALS['file'] = $file;
 			}
@@ -404,7 +408,7 @@ namespace
 			}
 			if (!is_array($file)) return;
 
-			if (is_array($GLOBALS['file']))
+			if (!is_array($GLOBALS['file']))
 			{
 				$GLOBALS['file'] = $file;
 			}
