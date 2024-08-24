@@ -125,6 +125,13 @@ namespace EGroupware\Developer
 
 					foreach ($lines as $n => $line)
 					{
+						// scan for hint and caption in context-menu array / get_actions()
+						if (preg_match("/'(caption|hint|confirm|confirm_multiple|confirm_mass_selection|shortcutCaption)'\s*=>\s*('([^']+)'|\"([^\"]+)\"),/", $line, $matches))
+						{
+							$phrase = str_replace('\\\\', '\\', $matches[3] ?? $matches[4]);
+							$this->add($phrase, $app, $root . $fn, $n + 1);
+							continue;
+						}
 						while (preg_match($reg_expr, $line, $parts))
 						{
 							$args = $this->functions[$parts[1]];
