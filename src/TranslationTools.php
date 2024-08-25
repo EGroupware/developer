@@ -223,8 +223,8 @@ class TranslationTools
 	{
 		if (!is_array($content) || empty($content['nm']))
 		{
-			// redirect to last active tool
-			if (($menuaction = Api\Cache::getSession(self::APP, 'active')) &&
+			// redirect to last active tool, unless $_GET[force] is given, as in sidebox menu
+			if (empty($_GET['force']) && ($menuaction = Api\Cache::getSession(self::APP, 'active')) &&
 				!str_starts_with($menuaction['menuaction'], self::APP.'.'.self::class.'.'))
 			{
 				Api\Framework::redirect_link('/index.php', $menuaction, self::APP);

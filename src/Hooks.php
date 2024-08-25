@@ -35,6 +35,7 @@ class Hooks
 			'edit_popup'  => '800x320',
 			'list' => array(
 				'menuaction' => Langfiles::APP.'.'.TranslationTools::class.'.index',
+				'force' => 'true',
 				'ajax' => 'true'
 			),
 			'add' => array(
@@ -59,6 +60,7 @@ class Hooks
 			$file = [
 				'TranslationTools' => Api\Egw::link('/index.php', [
 					'menuaction' => TranslationTools::APP.'.'.TranslationTools::class.'.index',
+					'force' => 'true',
 					'ajax' => 'true',
 				]),
 				'DB-Tools' => Api\Egw::link('/index.php', [
