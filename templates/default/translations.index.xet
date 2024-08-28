@@ -38,8 +38,8 @@
 	</template>
 	<template id="developer.translations.index.right" template="" lang="" group="0" version="19.1.001">
 		<et2-hbox>
-			<et2-button label="Save" id="save[current]" image="save" statustext="Save current language and 'en'"></et2-button>
-			<et2-button label="Save all" id="save[all]" image="save" statustext="Save all languages"></et2-button>
+			<et2-button label="Save" id="save[current]" image="apply" statustext="Save current language and 'en'"></et2-button>
+			<et2-button label="Save all" id="save[all]" image="apply" statustext="Save all languages"></et2-button>
 		</et2-hbox>
 	</template>
 	<template id="developer.translations.index" template="" lang="" group="0" version="19.1.001">

@@ -339,13 +339,13 @@ class TranslationTools
 			],
 			'current' => [
 				'caption' => 'Save',
-				'icon' => 'save',
+				'icon' => 'apply',
 				'hint' => "Save current language and 'en'",
 				'group' => $group,
 			],
 			'all' => [
 				'caption' => 'Save all',
-				'icon' => 'save',
+				'icon' => 'apply',
 				'hint' => "Save all languages",
 				'group' => $group,
 			],
