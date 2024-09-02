@@ -450,6 +450,26 @@ class Langfiles extends Api\Storage\Base
 	}
 
 	/**
+	 * Update trans_app_for for all translations of a phrase
+	 *
+	 * @param int $trans_phrase_id
+	 * @param string $trans_app_for
+	 * @return int
+	 * @throws Api\Db\Exception
+	 * @throws Api\Db\Exception\InvalidSql
+	 */
+	public function updateTransAppFor(int $trans_phrase_id, string $trans_app_for) : int
+	{
+		$this->db->update(self::TABLE, [
+			'trans_app_for' => $trans_app_for,
+		], [
+			'trans_phrase_id' => $trans_phrase_id,
+		], __LINE__, __FILE__, self::APP);
+
+		return $this->db->affected_rows();
+	}
+
+	/**
 	 * Deletes a phrase including all it's translations
 	 *
 	 * @param array|string|int|null $keys int trans_id, string with row_id (trans_app:trans_lang:trans_phrase_id)

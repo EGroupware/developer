@@ -79,6 +79,10 @@ class TranslationTools
 							'trans_lang' => 'en',
 						]);
 					}
+					elseif ($content['old_trans_app_for'] !== $content['trans_app_for'])
+					{
+						$this->bo->updateTransAppFor($content['trans_phrase_id'], $content['trans_app_for']);
+					}
 					if (!empty($content['trans_text']))
 					{
 						$content['trans_text'] = trim($content['trans_text']);
@@ -136,7 +140,9 @@ class TranslationTools
 			'trans_app_for' => $this->bo->transAppFor($content['trans_app']),
 		];
 		$tmpl = new Api\Etemplate('developer.translations.edit');
-		$tmpl->exec(self::APP.'.'.self::class.'.edit', $content, $sel_options, $readonlys, $content, 2);
+		$tmpl->exec(self::APP.'.'.self::class.'.edit', $content, $sel_options, $readonlys, [
+			'old_trans_app_for' => $content['trans_app_for'],
+		]+$content, 2);
 	}
 
 	/**
