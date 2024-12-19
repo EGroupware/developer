@@ -363,6 +363,14 @@ namespace EGroupware\Developer
 						}
 					}
 				}
+
+				// third search Et2Dialog.confirm(widget, '...', '...')
+				preg_match_all('/\\sonclick="[^"]*Et2Dialog\\.confirm\\([^,]+,\\s*\'([^"]+)\'\\s*,\\s*\'([^"]+)\'\\)/', $content, $matches, PREG_PATTERN_ORDER);
+
+				foreach (array_merge($matches[1], $matches[2]) as $label)
+				{
+					$this->add(html_entity_decode($label), $app, $fname, self::findLine($fname, "'$label'"));
+				}
 			}
 		}
 
