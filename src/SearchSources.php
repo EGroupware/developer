@@ -346,7 +346,7 @@ namespace EGroupware\Developer
 				}
 
 				// second search all widgets with e.g. label or other translation relevant attributes
-				preg_match_all('#\s+(value|label|summary|placeholder|statustext|blur)="([^"]+)"#', $content, $attributes, PREG_PATTERN_ORDER);
+				preg_match_all('#\s+(value|label|summary|placeholder|statustext|blur|emptyLabel)="([^"]+)"#', $content, $attributes, PREG_PATTERN_ORDER);
 
 				foreach(['options' => $options[1]??[], 'attributes' => $attributes[2]??[]] as $type => $labels)
 				{
