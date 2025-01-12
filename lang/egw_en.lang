@@ -1,6 +1,13 @@
 %1 translations deleted.	developer	en	%1 translations deleted.
 delete this phrase for all languages?	developer	en	Delete this phrase for all languages?
 developer	common	en	Developer Tools
+import all lang-files	developer	en	Import all lang-files
+importing %1 (%2) ...	developer	en	Importing %1 (%2) ...
+lang-files exported	developer	en	Lang-files exported
 save all languages	developer	en	Save all languages
-translationtools	developer	en	TranslationTools
+save current language and 'en'	developer	en	Save current language and 'en'
+scan	developer	en	Scan
+scan application for new phrases	developer	en	Scan application for new phrases
+translationtools	developer	en	Translation Tools
 untranslated	developer	en	untranslated
+you need to select an application first!	developer	en	You need to select an app first!
