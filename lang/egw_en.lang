@@ -1,9 +1,21 @@
+%1 phrases added.	developer	en	%1 phrases added.
 %1 translations deleted.	developer	en	%1 translations deleted.
+%1 translations imported.	developer	en	%1 translations imported.
+all applications	developer	en	All applications
+app	developer	en	App
+check	developer	en	Check
 delete this phrase for all languages?	developer	en	Delete this phrase for all languages?
 developer	common	en	Developer Tools
+entry deleted.	developer	en	Entry deleted.
+entry saved.	developer	en	Entry saved.
+error deleting entry!	developer	en	Error deleting entry!
+error storing entry!	developer	en	Error storing entry!
 import all lang-files	developer	en	Import all lang-files
 importing %1 (%2) ...	developer	en	Importing %1 (%2) ...
 lang-files exported	developer	en	Lang-files exported
+leave empty, if identical to phrase	developer	en	leave empty, if identical to phrase
+modified	developer	en	Modified
+phrase	developer	en	Phrase
 save all languages	developer	en	Save all languages
 save current language and 'en'	developer	en	Save current language and 'en'
 scan	developer	en	Scan

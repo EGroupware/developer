@@ -1,6 +1,11 @@
 %1 translations deleted.	developer	de	%1 Übersetzungen gelöscht.
+%1 translations imported.	developer	de	%1 Übersetzungen importiert.
+all applications	developer	de	Alle Apps
+app	developer	de	App
 delete this phrase for all languages?	developer	de	Diese Phrase für alle Sprachen löschen?
 developer	common	de	Entwickler-Tools
+entry deleted.	developer	de	Eintrag gelöscht.
+entry saved.	developer	de	Eintrag gespeichert.
 import all lang-files	developer	de	Alle Sprachdateien importieren
 importing %1 (%2) ...	developer	de	Importiere %1 (%2) ...
 lang-files exported	developer	de	Sprachdateien exportiert.
