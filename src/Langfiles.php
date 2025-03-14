@@ -311,6 +311,22 @@ class Langfiles extends Api\Storage\Base
 	}
 
 	/**
+	 * Get a default list of columns to search
+	 * This is to be used as a fallback, for when the extending class does not define
+	 * $this->columns_to_search.  All the columns are considered, and any with $skip_columns_with in
+	 * their name are discarded because these columns are expected to be foreign keys or other numeric
+	 * values with no meaning to the user.
+	 *
+	 * @return array of column names
+	 */
+	protected function get_default_search_columns()
+	{
+		$search_cols = parent::get_default_search_columns();
+		$search_cols[] = 'en_translations.trans_text';
+		return $search_cols;
+	}
+
+		/**
 	 * Reads row matched by key and puts all cols in the data array
 	 *
 	 * @param array $keys array with keys in form internalName => value, may be a scalar value if only one key
