@@ -89,9 +89,12 @@ class TranslationTools
 						$this->bo->init($content);
 						if (!$this->bo->save($content))
 						{
-							Api\Framework::refresh_opener(lang('Entry saved.'),
+							Api\Framework::refresh_opener(
+								($content['old_trans_app_for'] === $content['trans_app_for'] ? lang('Entry saved.') :
+									' '.lang('Remember to %1, as application has been changed!', '['.lang('Save all').']')),
 								self::APP, $this->bo->data['row_id'],
-								empty($content['row_id']) ? 'add' : 'edit');
+								empty($content['row_id']) ? 'add' : 'edit', null, null, null,
+								$content['old_trans_app_for'] !== $content['trans_app_for'] ? 'info' : 'success');
 
 							$content = array_merge($content, $this->bo->data);
 							Api\Framework::message(lang('Entry saved.'));
