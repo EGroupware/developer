@@ -140,7 +140,7 @@ class TranslationTools
 			'phrase' => !empty($content['trans_phrase_id']),
 		];
 		$sel_options = [
-			'trans_app_for' => $this->bo->transAppFor($content['trans_app']),
+			'trans_app_for' => $this->bo->transAppFor($content['trans_app'], $content['trans_app_for']),
 		];
 		$tmpl = new Api\Etemplate('developer.translations.edit');
 		$tmpl->exec(self::APP.'.'.self::class.'.edit', $content, $sel_options, $readonlys, [

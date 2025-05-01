@@ -596,19 +596,41 @@ class Langfiles extends Api\Storage\Base
 	 * Get trans_app_for values for a given $app
 	 *
 	 * @param string $app
+	 * @param string|null $trans_app_for =null
 	 * @return string[] app-name => label
 	 */
-	function transAppFor(string $app)
+	function transAppFor(string $app, ?string $trans_app_for=null)
 	{
 		// api is "common" by default, and never "api"
-		return (empty($app) || !in_array($app, ['api', 'phpgwapi']) ? [
+		$apps = !empty($app) && !in_array($app, ['api', 'phpgwapi']) ? [
 			$app => $app,
-			// setup only uses setup, as it does NOT load other translations
-		] : [])+($app !== 'setup' ? [
-			'common'      => 'All applications',
-			'login'       => 'login',
-			'admin'       => 'admin',
-			'preferences' => 'preferences',
-		] : []);
+		] : [];
+		// if we have a different trans_app_for, add it
+		if (!empty($trans_app_for) && $trans_app_for !== $app)
+		{
+			$apps[$trans_app_for] = $trans_app_for;
+		}
+		// setup only uses setup, as it does NOT load other translations
+		if ($app !== 'setup')
+		{
+			$apps += [
+				'common'      => 'All applications',
+				'login'       => 'login',
+				'admin'       => 'admin',
+				'preferences' => 'preferences',
+			];
+		}
+		// for EPL functions we might need all apps
+		if ($app === 'stylite')
+		{
+			foreach($GLOBALS['egw_info']['apps'] as $app_name => $info)
+			{
+				if (!in_array($app_name, ['api', 'phpgwapi', 'setup']))
+				{
+					$apps[$app_name] = $app_name;
+				}
+			}
+		}
+		return $apps;
 	}
 }
