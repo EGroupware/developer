@@ -19,69 +19,12 @@ class DeveloperApp extends EgwApp
 	// app name
 	readonly appname = 'developer';
 
-	protected nm : et2_nextmatch;
 	/**
 	 * app js initialization stage
 	 */
 	constructor(appname: string)
 	{
 		super(appname);
-
-		this.nmFilterChange = this.nmFilterChange.bind(this);
-	}
-
-	destroy(_app)
-	{
-		super.destroy(_app);
-
-		if (this.nm && this.nm.getDOMNode())
-		{
-			this.nm.getDOMNode().removeEventListener('et2-filter', this.nmFilterChange);
-		}
-	}
-
-	/**
-	 * et2 object is ready to use
-	 *
-	 * @param {object} et2 object
-	 * @param {string} name template name et2_ready is called for eg. "example.edit"
-	 */
-	et2_ready(et2,name)
-	{
-		// call parent
-		super.et2_ready.apply(this, arguments);
-
-		switch(name)
-		{
-			case "developer.translations.index":
-				this.nm = this.et2.getWidgetById('nm');
-				this.nm.getDOMNode().addEventListener('et2-filter', this.nmFilterChange);
-				const untranslated_toggle = this.et2.getWidgetById('nm[untranslated]');
-				if (untranslated_toggle) {
-					window.setTimeout(() => {
-						untranslated_toggle.value = this.et2.getArrayMgr('content').getEntry('nm[filter2]') === 'untranslated';
-					}, 100);
-				}
-				break;
-		}
-	}
-
-	/**
-	 * Keep untranslated toggle and app-selector in sync with NM / filter thingy
-	 *
-	 * @param _ev : Event
-	 */
-	nmFilterChange(_ev : Event)
-	{
-		const app_change = this.et2.getWidgetById('nm[cat_id]');
-		if (app_change && app_change.value != _ev.detail.activeFilters.cat_id)
-		{
-			app_change.value = _ev.detail.activeFilters.cat_id;
-		}
-		const untranslated_toggle = this.et2.getWidgetById('nm[untranslated]');
-		if (untranslated_toggle && (untranslated_toggle.value === 'untranslated') != (_ev.detail.activeFilters.filter2 === 'untranslated')) {
-			untranslated_toggle.value = _ev.detail.activeFilters.filter2 === 'untranslated';
-		}
 	}
 
 	/**
@@ -93,14 +36,23 @@ class DeveloperApp extends EgwApp
 	}
 
 	/**
-	 * Propagate app-selection to NM and filter thingy
+	 * Check if any NM filter or search in app-toolbar needs to be updated to reflect NM internal state
 	 *
-	 * @param _ev
-	 * @param _widget
+	 * @param app_toolbar
+	 * @param id
+	 * @param value
 	 */
-	changeApp(_ev : Event, _widget : Et2Select)
+	checkNmFilterChanged(app_toolbar, id : string, value : string)
 	{
-		this.nm && this.nm.applyFilters({cat_id: _widget.value});
+		super.checkNmFilterChanged(app_toolbar, id, value);
+
+		if (id === 'filter2')
+		{
+			const untranslated_toggle = this.et2.getWidgetById('untranslated');
+			if (untranslated_toggle && untranslated_toggle.value != (value === 'untranslated')) {
+				untranslated_toggle.value = value === 'untranslated';
+			}
+		}
 	}
 }
 

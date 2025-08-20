@@ -38,9 +38,8 @@
 			onclick="egw(window).openPopup(egw::link('/index.php','menuaction=developer.EGroupware\\Developer\\TranslationTools.scan'),'800','800','_blank','developer',null,true); return false;" noSubmit="true"></et2-button>
 		<et2-hbox class="rest">
 			<et2-hbox>
-				<et2-select id="nm[cat_id]" emptyLabel="App apps" onchange="app.developer.changeApp"></et2-select>
-				<!--et2-select id="nm[filter2]"></et2-select-->
-				<et2-button-toggle id="nm[untranslated]" icon="developer/navbar" statustext="Show only untranslated" onchange="app.developer.toggleUntranslated"></et2-button-toggle>
+				<et2-select id="cat_id" emptyLabel="App apps" onchange="app.developer.changeNmFilter"></et2-select>
+				<et2-button-toggle id="untranslated" icon="developer/navbar" statustext="Show only untranslated" onchange="app.developer.toggleUntranslated"></et2-button-toggle>
 			</et2-hbox>
 			<et2-hbox align="right">
 				<et2-button label="Save" id="save[current]" image="apply" statustext="Save current language and 'en'"></et2-button>
