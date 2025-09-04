@@ -261,12 +261,12 @@ class TranslationTools
 			];
 			$content['nm']['actions'] = $this->get_actions();
 		}
-		elseif(!empty($content['nm']['action']) || !empty($content['nm']['save']))
+		elseif(!empty($content['nm']['action']) || !empty($content['save']))
 		{
 			try {
-				Api\Framework::message($this->action(key(array_filter($content['nm']['save'] ?? [])) ?? $content['nm']['action'],
+				Api\Framework::message($this->action(key(array_filter($content['save'] ?? [])) ?? $content['nm']['action'],
 					$content['nm']['selected'], $content['nm']['select_all']));
-				unset($content['nm']['action'], $content['nm']['save']);
+				unset($content['nm']['action'], $content['save']);
 			}
 			catch (\Exception $ex) {
 				Api\Framework::message($ex->getMessage(), 'error');
