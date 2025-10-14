@@ -103,7 +103,7 @@
 			</rows>
 		</grid>
 	</template>
-	<template id="developer.db-tools.edit" template="" lang="" group="0" version="23.1.001">
+	<template id="developer.db-tools.edit" template="" lang="" group="0" version="23.1.001" style="padding: 5px 0 0 5px;">
 		<et2-vbox>
 			<et2-description id="msg" span="all" class="redItalic" disabled="!@msg"></et2-description>
 			<et2-hbox>

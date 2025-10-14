@@ -57,36 +57,40 @@ class Hooks
 
 		if ($location !== 'admin')
 		{
-			$file = [
-				'TranslationTools' => Api\Egw::link('/index.php', [
-					'menuaction' => TranslationTools::APP.'.'.TranslationTools::class.'.index',
-					'force' => 'true',
-					'ajax' => 'true',
-				]),
-				'DB-Tools' => Api\Egw::link('/index.php', [
-					'menuaction' => TranslationTools::APP.'.'.DbTools::class.'.edit',
-					'ajax' => 'true',
-				]),
-			];
-			display_sidebox($appname, lang('%1 menu', lang(self::APP)), $file);
+			foreach([
+				[
+					'icon' => 'developer/navbar',
+					'text' => 'TranslationTools',
+					'link' => Api\Egw::link('/index.php', [
+						'menuaction' => TranslationTools::APP.'.'.TranslationTools::class.'.index',
+						'force' => 'true',
+						'ajax' => 'true',
+					]),
+				], [
+					'icon' => 'database-add',
+					'text' => 'DB-Tools',
+					'link' => Api\Egw::link('/index.php', [
+						'menuaction' => TranslationTools::APP.'.'.DbTools::class.'.edit',
+						'ajax' => 'true',
+					]),
+				],
+			] as $item)
+			{
+				// flatten menu for kdots
+				display_sidebox($appname, lang($item['text']), [$item]);
+			}
 		}
-		if ($GLOBALS['egw_info']['user']['apps']['admin'])
+		if ($GLOBALS['egw_info']['user']['apps']['admin'] && $location === 'admin')
 		{
-			$file = [
-				'Site Configuration' => Api\Egw::link('/index.php',[
+			display_section($appname, [[
+				'icon' => 'gear',
+				'text' => 'Site configuration',
+				'link' => Api\Egw::link('/index.php',[
 					'menuaction' => 'admin.admin_config.index',
 					'appname' => self::APP,
 					'ajax' => 'true',
 				]),
-			];
-			if ($location === 'admin')
-			{
-				display_section($appname, $file);
-			}
-			else
-			{
-				display_sidebox($appname, lang('Admin'), $file);
-			}
+			]]);
 		}
 	}
 }
