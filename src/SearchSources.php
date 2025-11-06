@@ -73,6 +73,18 @@ namespace EGroupware\Developer
 			{
 				[, $file] = explode($this->root . '/', $file);
 			}
+			elseif ($file === basename($file))
+			{
+				if (file_exists($this->root . '/' . ($f=$app.'/inc/'.$file)) ||
+					file_exists($this->root . '/' . ($f=$app.'/'.$file)))
+				{
+					$file = $f;
+				}
+				else
+				{
+					throw new \Exception('File not found: '.$file);
+				}
+			}
 			if (!isset($this->plist[$phrase]['occurrences'][$file]) || !in_array($line, $this->plist[$phrase]['occurrences'][$file]))
 			{
 				$this->plist[$phrase]['occurrences'][$file][] = $line;
