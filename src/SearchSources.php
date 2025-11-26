@@ -235,7 +235,8 @@ namespace EGroupware\Developer
 			ob_start();        // suppress all output
 			// call the hooks and not the files direct, as it works for both files and method hooks
 			$overwrite_fname = $line = null;
-			if (!file_exists($fname) && ($methods=Api\Hooks::exists('settings', $app, true)))
+			if (!file_exists(($fname===basename($fname)?$root.'/':'').$fname) &&
+				($methods=Api\Hooks::exists('settings', $app, true)))
 			{
 				foreach($methods as $method)
 				{
@@ -246,6 +247,10 @@ namespace EGroupware\Developer
 						break;
 					}
 				}
+			}
+			elseif ($fname === basename($fname))
+			{
+				$overwrite_fname = $root.'/'.$fname;
 			}
 			switch (basename($fname))
 			{
