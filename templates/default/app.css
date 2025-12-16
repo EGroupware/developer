@@ -11,9 +11,11 @@
 
 tr.untranslated {
     background-color: #dab0b0;
+    color: var(--sl-color-neutral-950, black);
 }
 tr.unsaved {
     background-color: darkseagreen;
+    color: var(--sl-color-neutral-950, black);;
 }
 et2-description.header {
     font-size: 120%;
