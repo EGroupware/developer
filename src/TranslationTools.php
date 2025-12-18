@@ -57,6 +57,10 @@ class TranslationTools
 			{
 				$content = $this->bo->init();
 				$state = Api\Cache::getSession(self::class, 'state');
+				if (empty($state['cat_id']))
+				{
+					return lang('You need to select an application first!');
+				}
 				$content['trans_app_for'] = $content['trans_app'] = $state['cat_id'];
 				$content['trans_lang'] = $state['filter'];
 			}
@@ -358,6 +362,10 @@ class TranslationTools
 				'hint' => "Save all languages",
 				'group' => $group,
 			],
+			'move_to_api' => [
+				'caption' => 'Move to api for all apps and languages',
+				'group' => $group,
+			],
 			'delete' => [
 				'caption' => 'Delete',
 				'confirm' => 'Delete this phrase for all languages?',
@@ -402,6 +410,18 @@ class TranslationTools
 					$deleted += $this->bo->delete($keys);
 				}
 				return lang('%1 translations deleted.', $deleted);
+
+			case 'move_to_api':
+				$trans_phrase_ids = $apps = [];
+				foreach ($selected as $id)
+				{
+					$keys = array_combine(['trans_app', 'trans_lang', 'trans_phrase_id'], explode(':', $id));
+					$trans_phrase_ids[$keys['trans_phrase_id']] = (int)$keys['trans_phrase_id'];
+					$apps[$keys['trans_app']] = $keys['trans_app'];
+				}
+				return lang('%1 phrase(s) moved to api, %2 no longer needed translations deleted.',
+					count($trans_phrase_ids), $this->bo->moveToApi($trans_phrase_ids)).
+					lang('You need to save the following apps for ALL languages:').' '.implode(', ', ['api'=>'api']+$apps);
 
 			case NULL:  // happens when column-selection changes
 				return null;

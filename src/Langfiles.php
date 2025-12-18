@@ -503,6 +503,27 @@ class Langfiles extends Api\Storage\Base
 	}
 
 	/**
+	 * Move the given phrase for all languages to api and delete it in all other apps.
+	 *
+	 * @param int|int[] $trans_phrase_id ID of the phrase to move to API
+	 * @return int number of deleted phrases
+	 */
+	function moveToApi($trans_phrase_id)
+	{
+		$trans_phrase_ids = $this->db->expression(self::TABLE, ['trans_phrase_id' => $trans_phrase_id]);
+
+		// do an UPDATE IGNORE to get all languages, not just the ones from the selected app
+		$this->db->query('UPDATE IGNORE '.self::TABLE." SET trans_app='api',trans_app_for='common' WHERE ".$trans_phrase_ids);
+
+		// now delete all not moved translations for the given phrase
+		$this->db->delete(self::TABLE, [
+			$trans_phrase_ids,
+			"trans_app<>'api'",
+		], __LINE__, __FILE__, self::APP);
+		return $this->db->affected_rows();
+	}
+
+	/**
 	 * Scan app for new phrases or check existing ones: phrases not in app's or common translations
 	 *
 	 * @param string $app
