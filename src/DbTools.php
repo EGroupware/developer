@@ -69,6 +69,7 @@ class DbTools
 		'timestamp'	=> 'timestamp',
 		'bool'      => 'boolean',
 		'ascii'     => 'ascii',
+		'vector'    => 'vector',
 //		'abstime'   => 'abstime (mysql:timestamp)',
 	];
 	/**

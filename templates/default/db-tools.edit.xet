@@ -6,10 +6,10 @@
 			<columns>
 				<column width="10"/>	<!-- # -->
 				<column width="12%"/>	<!-- name -->
-				<column width="80"/>	<!-- type -->
+				<column width="100"/>	<!-- type -->
 				<column width="120"/>	<!-- meta -->
 				<column width="30"/>	<!-- precision -->
-				<column width="30"/>	<!-- scale -->
+				<column width="20"/>	<!-- scale -->
 				<column width="30"/>	<!-- not null -->
 				<column width="30"/>	<!-- primary key -->
 				<column width="30"/>	<!-- unique -->
