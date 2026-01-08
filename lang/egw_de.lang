@@ -1,5 +1,6 @@
+%1 phrases added.	developer	de	%1 Phrase(n) hinzugefügt.
 %1 translations deleted.	developer	de	%1 Übersetzungen gelöscht.
-%1 translations imported.	developer	de	%1 Übersetzungen importiert.
+%1 translations imported.	developer	de	%1 Übersetzung(en) importiert.
 all applications	developer	de	Alle Apps
 app	developer	de	App
 check	developer	de	Prüfen
@@ -7,9 +8,12 @@ delete this phrase for all languages?	developer	de	Diese Phrase für alle Sprach
 developer	common	de	Entwickler-Tools
 entry deleted.	developer	de	Eintrag gelöscht.
 entry saved.	developer	de	Eintrag gespeichert.
+error deleting entry!	developer	de	Fehler beim Löschen des Eintrags!
+error storing entry!	developer	de	Fehler beim Speichern des Eintrags!
 import all lang-files	developer	de	Alle Sprachdateien importieren
 importing %1 (%2) ...	developer	de	Importiere %1 (%2) ...
 lang-files exported	developer	de	Sprachdateien exportiert.
+modified	developer	de	Geändert
 phrase	developer	de	Phrase
 save all languages	developer	de	Alle Sprachen speichern
 save current language and 'en'	developer	de	Aktuelle Sprache und 'en' speichern
