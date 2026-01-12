@@ -216,7 +216,11 @@ class Langfiles extends Api\Storage\Base
 					$last_app = $row['trans_app'];
 					$last_lang = $row['trans_lang'];
 				}
-				fwrite($fp, "$row[phrase]\t$row[trans_app_for]\t$row[trans_lang]\t$row[trans_text]\n");
+				fwrite($fp, "$row[phrase]\t$row[trans_app_for]\t$row[trans_lang]\t".strtr($row['trans_text'], [
+						'<br>' => '\\n',
+						'<br/>' => '\\n',
+						"\n" => '\\n',
+					])."\n");
 			}
 			$n += self::CHUNK_SIZE;
 		}
