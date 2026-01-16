@@ -71,6 +71,7 @@ class TranslationTools
 			unset($content['button']);
 			switch($button)
 			{
+				case 'save_new':
 				case 'save':
 				case 'apply':
 					// for new phrases, save the "en" text too
@@ -121,6 +122,10 @@ class TranslationTools
 					if ($button === 'save')
 					{
 						Api\Framework::window_close();	// does NOT return
+					}
+					elseif ($button === 'save_new')
+					{
+						$content = array_diff_key($content, array_flip(['trans_id', 'trans_phrase_id', 'phrase', 'trans_text', 'en_text', 'trans_modified']));
 					}
 					break;
 

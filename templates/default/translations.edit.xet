@@ -14,15 +14,15 @@
 				</row>
 				<row valign="top">
 					<et2-description value="Phrase"></et2-description>
-					<et2-textarea id="phrase" rows="3"></et2-textarea>
+					<et2-textarea id="phrase" rows="4"></et2-textarea>
 				</row>
 				<row valign="top">
 					<et2-description for="en_text" label="EN {translation}"></et2-description>
-					<et2-textarea id="en_text" rows="3" placeholder="leave empty, if identical to phrase"></et2-textarea>
+					<et2-textarea id="en_text" rows="4" placeholder="leave empty, if identical to phrase"></et2-textarea>
 				</row>
 				<row valign="top">
 					<et2-description for="trans_text" value="Translation"></et2-description>
-					<et2-textarea id="trans_text" rows="3"></et2-textarea>
+					<et2-textarea id="trans_text" rows="4"></et2-textarea>
 				</row>
 				<row disabled="!@trans_modified">
 					<et2-description  value="Last modified"></et2-description>
@@ -30,6 +30,7 @@
 				</row>
 				<row class="dialogFooterToolbar">
 					<et2-hbox  span="all" width="100%">
+						<et2-button  label="{Save} &amp; {New}" id="button[save_new]" image="save_new" hideOnReadonly="true"></et2-button>
 						<et2-button  accesskey="s" label="Save" id="button[save]" hideOnReadonly="true"></et2-button>
 						<et2-button  label="Apply" id="button[apply]" hideOnReadonly="true"></et2-button>
 						<et2-button  label="Cancel" id="button[cancel]" onclick="window.close(); return false;" hideOnReadonly="true"></et2-button>
