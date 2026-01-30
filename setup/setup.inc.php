@@ -11,7 +11,7 @@
  */
 
 $setup_info['developer']['name']      = 'developer';
-$setup_info['developer']['version']   = '23.1';
+$setup_info['developer']['version']   = '26.1';
 $setup_info['developer']['app_order'] = 1;
 $setup_info['developer']['enable']    = 1;
 $setup_info['developer']['tables']    = array('egw_translations');
@@ -34,5 +34,5 @@ $setup_info['developer']['hooks']['sidebox_menu'] = 'EGroupware\\Developer\\Hook
 /* Dependencies for this app to work */
 $setup_info['developer']['depends'][] = array(
 	 'appname' => 'api',
-	 'versions' => Array('23.1')
+	 'versions' => Array('26.1')
 );
