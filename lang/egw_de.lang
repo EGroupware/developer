@@ -13,6 +13,7 @@ error storing entry!	developer	de	Fehler beim Speichern des Eintrags!
 import all lang-files	developer	de	Alle Sprachdateien importieren
 importing %1 (%2) ...	developer	de	Importiere %1 (%2) ...
 lang-files exported	developer	de	Sprachdateien exportiert.
+leave empty, if identical to phrase	developer	de	Leer lassen, wenn identisch mit dem Ausdruck
 modified	developer	de	Geändert
 phrase	developer	de	Phrase
 save all languages	developer	de	Alle Sprachen speichern
