@@ -8,11 +8,10 @@
  * @license https://opensource.org/licenses/gpl-license.php GPL - GNU General Public License
  */
 
-import {app} from "../../api/js/jsapi/egw_global";
 import { EgwApp } from '../../api/js/jsapi/egw_app';
 import type {Et2ButtonToggle} from "../../api/js/etemplate/Et2Button/Et2ButtonToggle";
-import type {Et2Select} from "../../api/js/etemplate/Et2Select/Et2Select";
-import type {et2_nextmatch} from "../../api/js/etemplate/et2_extension_nextmatch";
+// egw/app are ambient globals (declare global {} in egw_global.d.ts, unconditionally included
+// via tsconfig's "**/*.d.ts") - no import needed or possible.
 
 class DeveloperApp extends EgwApp
 {
