@@ -9,6 +9,7 @@
  */
 
 import { EgwApp } from '../../api/js/jsapi/egw_app';
+import type {EgwFrameworkApp, FilterInfo} from "../../kdots/js/EgwFrameworkApp";
 import type {Et2ButtonToggle} from "../../api/js/etemplate/Et2Button/Et2ButtonToggle";
 // egw/app are ambient globals (declare global {} in egw_global.d.ts, unconditionally included
 // via tsconfig's "**/*.d.ts") - no import needed or possible.
@@ -24,6 +25,23 @@ class DeveloperApp extends EgwApp
 	constructor(appname: string)
 	{
 		super(appname);
+	}
+
+	/**
+	 * Translating into the user's own language is the default, it is not a filter
+	 *
+	 * @param filterValues
+	 * @param fwApp
+	 */
+	getFilterInfo(filterValues : { [id : string] : any }, fwApp : EgwFrameworkApp) : FilterInfo
+	{
+		const values = {...(filterValues ?? {})};
+		values.col_filter = {...(values.col_filter ?? {})};
+		if(values.filter == this.egw.preference('lang', 'common'))
+		{
+			delete values.filter;
+		}
+		return fwApp.filterInfo(values);
 	}
 
 	/**
