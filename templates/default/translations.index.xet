@@ -13,12 +13,12 @@
 			</columns>
 			<rows>
 				<row class="th">
-					<nextmatch-sortheader label="#" id="trans_id"/>
-					<nextmatch-sortheader id="trans_app_for" label="Application"/>
-					<nextmatch-sortheader label="Phrase" id="phrase"/>
-					<nextmatch-sortheader label="EN {translation}" id="en_text"/>
-					<nextmatch-sortheader label="Translation" id="trans_text"/>
-					<nextmatch-sortheader id="trans_modified" label="Modified"/>
+					<et2-nextmatch-sortheader  label="#" id="trans_id"></et2-nextmatch-sortheader>
+					<et2-nextmatch-sortheader  id="trans_app_for" label="Application"></et2-nextmatch-sortheader>
+					<et2-nextmatch-sortheader  label="Phrase" id="phrase"></et2-nextmatch-sortheader>
+					<et2-nextmatch-sortheader  label="EN {translation}" id="en_text"></et2-nextmatch-sortheader>
+					<et2-nextmatch-sortheader  label="Translation" id="trans_text"></et2-nextmatch-sortheader>
+					<et2-nextmatch-sortheader  id="trans_modified" label="Modified"></et2-nextmatch-sortheader>
 				</row>
 				<row class="$row_cont[class]">
 					<et2-description  id="${row}[trans_id]"></et2-description>
@@ -32,7 +32,7 @@
 		</grid>
 	</et2-template>
 	<et2-template id="developer.translations.index.header" template="" lang="" group="0" version="19.1.001">
-		<et2-button label="Add" id="add" onclick="egw(window).openPopup(egw::link('/index.php','menuaction=developer.EGroupware\\Developer\\TranslationTools.edit'),'800','320','_blank','developer',null,true); return false;" noSubmit="true"></et2-button>
+		<et2-button-icon statustext="Add" image="add" id="add" onclick="egw(window).openPopup(egw::link('/index.php','menuaction=developer.EGroupware\\Developer\\TranslationTools.edit'),'800','320','_blank','developer',null,true); return false;" noSubmit="true"></et2-button-icon>
 		<et2-template template="api.search-button"></et2-template>
 		<et2-button label="Scan" id="scan" image="view" statustext="Scan application for new phrases"
 			onclick="egw(window).openPopup(egw::link('/index.php','menuaction=developer.EGroupware\\Developer\\TranslationTools.scan'),'800','800','_blank','developer',null,true); return false;" noSubmit="true"></et2-button>
@@ -57,6 +57,6 @@
 	</et2-template>
 	<et2-template id="developer.translations.index" template="" lang="" group="0" version="19.1.001">
 		<et2-template template="developer.translations.index.header" slot="main-header"></et2-template>
-		<nextmatch id="nm" template="developer.translations.index.rows" />
+		<et2-nextmatch  id="nm" template="developer.translations.index.rows"></et2-nextmatch>
 	</et2-template>
 </overlay>
