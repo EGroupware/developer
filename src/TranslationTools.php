@@ -354,29 +354,81 @@ class TranslationTools
 				'icon' => 'import',
 				'hint' => 'Takes a while ...',
 				'group' => $group=2,
+				'onExecute' => 'javaScript:app.developer.ajax_action',
+				// the class is namespaced, so the "<app>.<app>_ui.ajax_action" convention the
+				// client falls back to would not find it
+				'data' => ['menuaction' => self::APP.'.'.self::class.'.ajax_action'],
 			],
 			'current' => [
 				'caption' => 'Save',
 				'icon' => 'apply',
 				'hint' => "Save current language and 'en'",
 				'group' => $group,
+				'onExecute' => 'javaScript:app.developer.ajax_action',
+				'data' => ['menuaction' => self::APP.'.'.self::class.'.ajax_action'],
 			],
 			'all' => [
 				'caption' => 'Save all',
 				'icon' => 'apply',
 				'hint' => "Save all languages",
 				'group' => $group,
+				'onExecute' => 'javaScript:app.developer.ajax_action',
+				'data' => ['menuaction' => self::APP.'.'.self::class.'.ajax_action'],
 			],
 			'move_to_api' => [
 				'caption' => 'Move to api for all apps and languages',
 				'group' => $group,
+				'onExecute' => 'javaScript:app.developer.ajax_action',
+				'data' => ['menuaction' => self::APP.'.'.self::class.'.ajax_action'],
 			],
 			'delete' => [
 				'caption' => 'Delete',
 				'confirm' => 'Delete this phrase for all languages?',
 				'group' => $group=5,
+				'onExecute' => 'javaScript:app.developer.ajax_action',
+				'data' => ['menuaction' => self::APP.'.'.self::class.'.ajax_action'],
 			],
 		];
+	}
+
+	/**
+	 * Run the translation list's context-menu actions over ajax, so the list keeps its scroll
+	 * position and selection instead of being rebuilt
+	 *
+	 * Only 'delete' on a single row can be a row update. Import, Save, Save all and Move to api
+	 * all rewrite phrases the list is not necessarily showing - Import in particular adds rows -
+	 * so they ask for a plain reload by sending no id.
+	 *
+	 * @param string $exec_id eTemplate request this came from - the only thing saying the caller
+	 *	had one of our pages open, see Nextmatch::validateExecId()
+	 * @param string $action 'import', 'current', 'all', 'move_to_api' or 'delete'
+	 * @param string[] $selected row ids, "<trans_app>:<trans_lang>:<trans_phrase_id>"
+	 * @param bool $all_selected accepted but not expanded: action() loops exactly the ids it is
+	 *	handed, which is what the submit it replaces did too
+	 */
+	public function ajax_action($exec_id, $action, array $selected, $all_selected = false)
+	{
+		if (!Api\Etemplate\Widget\Nextmatch::validateExecId($exec_id))
+		{
+			return;
+		}
+		$failed = false;
+		try
+		{
+			$msg = $this->action($action, $selected, $all_selected);
+		}
+		catch (\Exception $e)
+		{
+			$msg = $e->getMessage();
+			$failed = true;
+		}
+		// Naming the app in the 2nd argument makes egw.refresh() update the list itself: the
+		// "message only, a push will carry the change" sentinel needs something to send that
+		// push, and developer never calls Link::notify_update().
+		$single = $action === 'delete' && !$all_selected && count($selected) === 1;
+		Api\Json\Response::get()->call('egw.refresh', $msg, self::APP,
+			$single ? $selected[0] : null, $single ? 'delete' : null, self::APP, null, null,
+			$failed ? 'error' : 'success');
 	}
 
 	/**
