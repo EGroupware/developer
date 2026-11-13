@@ -109,8 +109,8 @@ class Langfiles extends Api\Storage\Base
 				// read all (existing) translations of $app and ($lang OR "en"), "en" to have the trans_phrase_id available
 				$translations = [];
 				foreach($this->db->select(self::TABLE, self::TABLE.'.*,phrases.trans_text AS phrase', [
-					self::TABLE.'.trans_app='.$this->db->quote($app),
-					'('.self::TABLE.'.trans_lang='.$this->db->quote($lang).' OR '.self::TABLE.".trans_lang='en')",
+					Api\Db\SqlFragment::raw(self::TABLE.'.trans_app='.$this->db->quote($app)),
+					Api\Db\SqlFragment::raw('('.self::TABLE.'.trans_lang='.$this->db->quote($lang).' OR '.self::TABLE.".trans_lang='en')"),
 				], __LINE__, __FILE__, false, '', self::APP, 0,
 					' JOIN '.self::TABLE.' phrases ON phrases.trans_id='.self::TABLE.'.trans_phrase_id') as $row)
 				{
@@ -171,7 +171,7 @@ class Langfiles extends Api\Storage\Base
 						'trans_id' => array_map(static function ($translation) {
 							return $translation['trans_id'];
 						}, $translations),
-						'trans_modified <= ' . $this->db->quote($mtime, 'timestamp'),
+						Api\Db\SqlFragment::raw('trans_modified <= ' . $this->db->quote($mtime, 'timestamp')),
 					], __LINE__, __FILE__, Langfiles::APP);
 				}
 			}
@@ -196,9 +196,9 @@ class Langfiles extends Api\Storage\Base
 		do {
 			$row = null;
 			foreach($this->db->select(self::TABLE, self::TABLE.'.*,phrases.trans_text AS phrase', array_merge([
-					$_lang === 'en' ? self::TABLE.'.trans_phrase_id IS NOT NULL' :
+					Api\Db\SqlFragment::raw($_lang === 'en' ? self::TABLE.'.trans_phrase_id IS NOT NULL' :
 						// only export phrases, which are also in "en"
-						self::TABLE.".trans_phrase_id IN (SELECT trans_phrase_id FROM ".self::TABLE." WHERE trans_lang='en' AND trans_app=".$this->db->quote($_app).")",
+						self::TABLE.".trans_phrase_id IN (SELECT trans_phrase_id FROM ".self::TABLE." WHERE trans_lang='en' AND trans_app=".$this->db->quote($_app).")"),
 				], ($_app ? [$this->db->expression(self::TABLE, self::TABLE.'.', ['trans_app' => $_app])] : []),
 				($_lang ? [$this->db->expression(self::TABLE, self::TABLE.'.', ['trans_lang' => $_lang])] : [])),
 				__LINE__, __FILE__, $n,
@@ -286,10 +286,10 @@ class Langfiles extends Api\Storage\Base
                 " LEFT JOIN egw_translations on en_translations.trans_phrase_id=egw_translations.trans_phrase_id".
 					" AND egw_translations.trans_app=en_translations.trans_app".
 					" AND egw_translations.trans_lang=".$this->db->quote($filter['trans_lang']);
-			$filter[] = "en_translations.trans_lang='en'";
+			$filter[] = Api\Db\SqlFragment::raw("en_translations.trans_lang='en'");
 			if (array_key_exists('trans_app', $filter) && !empty($filter['trans_app']))
 			{
-				$filter[] = "en_translations.trans_app=".$this->db->quote($filter['trans_app']);
+				$filter[] = Api\Db\SqlFragment::raw("en_translations.trans_app=".$this->db->quote($filter['trans_app']));
 			}
 			unset($filter['trans_app']);
 			$extra_cols[] = 'phrases.trans_text AS phrase';
@@ -352,12 +352,12 @@ class Langfiles extends Api\Storage\Base
 					' AND en_translations.trans_app=egw_translations.trans_app'.
 					(!empty($keys['trans_id']) ? ' AND egw_translations.trans_id='.(int)$keys['trans_id'] :
 						' AND egw_translations.trans_lang='.$this->db->quote($keys['trans_lang']));
-			$keys[] = "en_translations.trans_lang='en'";
+			$keys[] = Api\Db\SqlFragment::raw("en_translations.trans_lang='en'");
 			foreach(['trans_app', 'trans_phrase_id'] as $key)
 			{
 				if (!empty($keys[$key]))
 				{
-					$keys[] = "en_translations.$key=".$this->db->quote($keys[$key], $key === 'trans_phrase_id' ? 'int' : 'varchar');
+					$keys[] = Api\Db\SqlFragment::raw("en_translations.$key=".$this->db->quote($keys[$key], $key === 'trans_phrase_id' ? 'int' : 'varchar'));
 					unset($keys[$key]);
 				}
 			}
@@ -522,7 +522,7 @@ class Langfiles extends Api\Storage\Base
 		// now delete all not moved translations for the given phrase
 		$this->db->delete(self::TABLE, [
 			$trans_phrase_ids,
-			"trans_app<>'api'",
+			Api\Db\SqlFragment::raw("trans_app<>'api'"),
 		], __LINE__, __FILE__, self::APP);
 		return $this->db->affected_rows();
 	}
@@ -545,8 +545,8 @@ class Langfiles extends Api\Storage\Base
 
 		$existing = [];
 		foreach($this->db->select(self::TABLE, 'DISTINCT '.self::TABLE.'.trans_text AS phrase,en_translations.trans_text AS en_text', array_merge([
-			self::TABLE.'.trans_phrase_id IS NULL',
-			"en_translations.trans_app IN ('api', ".$this->db->quote($app).")",
+			Api\Db\SqlFragment::raw(self::TABLE.'.trans_phrase_id IS NULL'),
+			Api\Db\SqlFragment::raw("en_translations.trans_app IN ('api', ".$this->db->quote($app).")"),
 		], !empty($row_ids) ? [
 			$this->db->expression(self::TABLE, 'en_translations.', ['trans_phrase_id' => array_map(static function($row_id) {
 				return explode(':', $row_id)[2];

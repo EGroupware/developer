@@ -197,12 +197,12 @@ class TranslationTools
 			switch ($query['filter2'])
 			{
 				case 'untranslated':
-					$query['col_filter'][] = Langfiles::TABLE.'.trans_text IS NULL';
+					$query['col_filter'][] = Api\Db\SqlFragment::raw(Langfiles::TABLE.'.trans_text IS NULL');
 					break;
 				case 'unsaved':
 					if (!empty($query['cat_id']))
 					{
-						$query['col_filter'][] = Langfiles::TABLE.'.trans_modified > '.$GLOBALS['egw']->db->quote($this->bo->mtimeLangFile($query['cat_id'], $query['filter']), 'timestamp');
+						$query['col_filter'][] = Api\Db\SqlFragment::raw(Langfiles::TABLE.'.trans_modified > '.$GLOBALS['egw']->db->quote($this->bo->mtimeLangFile($query['cat_id'], $query['filter']), 'timestamp'));
 					}
 					else
 					{
