@@ -274,7 +274,7 @@ class TranslationTools
 		{
 			try {
 				Api\Framework::message($this->action(key(array_filter($content['save'] ?? [])) ?? $content['nm']['action'],
-					$content['nm']['selected'], $content['nm']['select_all']));
+					$content['nm']['selected']));
 				unset($content['nm']['action'], $content['save']);
 			}
 			catch (\Exception $ex) {
@@ -415,7 +415,7 @@ class TranslationTools
 		$failed = false;
 		try
 		{
-			$msg = $this->action($action, $selected, $all_selected);
+			$msg = $this->action($action, $selected);
 		}
 		catch (\Exception $e)
 		{
@@ -436,11 +436,10 @@ class TranslationTools
 	 *
 	 * @param string $action
 	 * @param array|int $selected
-	 * @param boolean $select_all
 	 * @returns string with success message
 	 * @throws Api\Exception\AssertionFailed
 	 */
-	protected function action($action, $selected, $select_all)
+	protected function action($action, $selected)
 	{
 		switch ($action)
 		{
