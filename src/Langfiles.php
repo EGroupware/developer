@@ -14,6 +14,8 @@ namespace EGroupware\Developer;
 
 use EGroupware\Api;
 
+require_once __DIR__.'/../../api/src/WebDAV/Server.php';
+
 class Langfiles extends Api\Storage\Base
 {
 	const APP = 'developer';
@@ -46,7 +48,8 @@ class Langfiles extends Api\Storage\Base
 	 */
 	public function langPath(string $app, ?string $lang=null)
 	{
-		return $this->langfile_root.'/'.$app.'/lang'.($lang ? '/egw_'.$lang.'.lang' : '');
+		$app = \HTTP_WebDAV_Server::sanitize_filename($app);
+		return $this->langfile_root.'/'.$app.'/lang'.($lang ? '/egw_'.\HTTP_WebDAV_Server::sanitize_filename($lang).'.lang' : '');
 	}
 
 	/**

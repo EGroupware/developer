@@ -15,6 +15,8 @@ namespace EGroupware\Developer
 
 	use EGroupware\Api;
 
+	require_once __DIR__.'/../../api/src/WebDAV/Server.php';
+
 	class SearchSources
 	{
 		protected $functions = array(        // functions containing phrases to translate and param#
@@ -54,6 +56,7 @@ namespace EGroupware\Developer
 		 */
 		public static function searchApp(string $app, string $root = EGW_SERVER_ROOT)
 		{
+			$app = \HTTP_WebDAV_Server::sanitize_filename($app);
 			$search = new self($root);
 			$search->parse_php_app($app == 'phpgwapi' || $app === 'api' ? 'common' : $app, $root.'/'.$app . '/');
 
